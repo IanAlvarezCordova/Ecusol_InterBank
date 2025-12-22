@@ -1,0 +1,8 @@
+{
+    "bancoOrigen": "NEXUS",
+    "cuentaOrigen": "2701000001",
+    "cuentaDestino": "2809000001",
+    "monto": 50.00,
+    "referencia": "test-nexus-to-ecusol-001",
+    "concepto": "Prueba transferencia NEXUS a ECUSOL"
+}
