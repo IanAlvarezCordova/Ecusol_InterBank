@@ -1,5 +1,5 @@
 -- Backfill script para popular campo `tipo` en tabla transaccion
--- Ejecutar en el contenedor postgres-db-nexus, base de datos postgres, schema public
+-- Ejecutar en el contenedor postgres-db-ecusol, base de datos postgres, schema public
 
 -- 1. Marcar todas las filas sin tipo como TRANSFERENCIA por defecto
 -- (asumiendo que la mayoría son transferencias desde la web)

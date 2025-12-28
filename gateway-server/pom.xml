@@ -10,7 +10,7 @@
         <relativePath/>
     </parent>
     
-    <groupId>com.nexus</groupId>
+    <groupId>com.ecusol</groupId>
     <artifactId>gateway-server</artifactId>
     <version>0.1</version>
     <name>gateway-server</name>

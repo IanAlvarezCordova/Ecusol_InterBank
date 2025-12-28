@@ -45,7 +45,7 @@ ms-transacciones:
   environment:
     # URL del Switch (Local vs Producción)
     APP_SWITCH_URL: http://host.docker.internal:9081      # Local
-    # APP_SWITCH_URL: http://34.44.123.236:9080           # Producción
+    # APP_SWITCH_URL: http://34.44.123.236:9180           # Producción
     
     # URL para Network Management (lista de bancos)
     APP_SWITCH_NETWORK_URL: http://host.docker.internal:9082
@@ -458,7 +458,7 @@ curl -X POST http://localhost:8082/api/transacciones/webhook \
 - **Switch Admin**: Kris Olalla
 - **IP Switch (Producción)**: `34.44.123.236`
 - **Puertos**:
-  - API Gateway: `9080`
+  - API Gateway: `9180`
   - Payment Processing: `9081`
   - Network Management: `9082`
   - Account Balance: `9083`

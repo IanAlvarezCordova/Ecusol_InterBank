@@ -1,17 +1,17 @@
 -- =====================================================
--- SCRIPT DE INICIALIZACIÓN - NEXUS MICROSERVICIOS
+-- SCRIPT DE INICIALIZACIÓN - ecusol MICROSERVICIOS
 -- =====================================================
 
 -- 1. Esquemas para el CORE
-CREATE SCHEMA IF NOT EXISTS nexus_cuentas;
-CREATE SCHEMA IF NOT EXISTS nexus_clientes;
-CREATE SCHEMA IF NOT EXISTS nexus_transacciones;
+CREATE SCHEMA IF NOT EXISTS ecusol_cuentas;
+CREATE SCHEMA IF NOT EXISTS ecusol_clientes;
+CREATE SCHEMA IF NOT EXISTS ecusol_transacciones;
 
 -- 2. Esquema para el SERVICIO WEB
-CREATE SCHEMA IF NOT EXISTS nexus_web;
+CREATE SCHEMA IF NOT EXISTS ecusol_web;
 
 -- 3. Esquema para el SERVICIO VENTANILLA
-CREATE SCHEMA IF NOT EXISTS nexus_ventanilla;
+CREATE SCHEMA IF NOT EXISTS ecusol_ventanilla;
 
 -- =====================================================
 -- DATOS INICIALES (se ejecutan después de que Hibernate cree las tablas)

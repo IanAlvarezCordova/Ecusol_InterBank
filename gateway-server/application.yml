@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: nexus-gateway
+    name: ecusol-gateway
   cloud:
     gateway:
       globalcors:
@@ -24,23 +24,23 @@ spring:
             maxAge: 3600
       routes:
         # --- RUTAS CORE ---
-        - id: nexus-ms-transacciones
-          uri: http://nexus-ms-transacciones:8082
+        - id: ecusol-ms-transacciones
+          uri: http://ecusol-ms-transacciones:8082
           predicates:
             - Path=/api/v1/transacciones/**, /api/v1/switch/**
 
-        - id: nexus-ms-cuentas
-          uri: http://nexus-ms-cuentas:8083
+        - id: ecusol-ms-cuentas
+          uri: http://ecusol-ms-cuentas:8083
           predicates:
             - Path=/api/cuentas/**, /api/tasas/**, /api/tipos-cuenta/**
 
-        - id: nexus-ms-clientes
-          uri: http://nexus-ms-clientes:8084
+        - id: ecusol-ms-clientes
+          uri: http://ecusol-ms-clientes:8084
           predicates:
             - Path=/api/v1/clientes/**
 
-        - id: nexus-ms-geografia
-          uri: http://nexus-ms-geografia:8081
+        - id: ecusol-ms-geografia
+          uri: http://ecusol-ms-geografia:8081
           predicates:
             - Path=/api/entidad/**, /api/feriado/**, /api/sucursal/**, /api/ubicacion/**, /api/geografia/**
 
@@ -51,33 +51,33 @@ spring:
             - Path=/api/web/**, /api/auth/**, /api/util/**
 
         # --- RUTAS VENTANILLA ---
-        - id: ventanilla-backend
-          uri: http://ventanilla-backend:8083
+        - id: ventanilla-backend-ecusol
+          uri: http://ventanilla-backend-ecusol:8083
           predicates:
             - Path=/api/ventanilla/**
             # No Filters needed as backend accepts /api/ventanilla/...
 
         # --- RUTAS SWAGGER ---
         - id: openapi-transacciones
-          uri: http://nexus-ms-transacciones:8082
+          uri: http://ecusol-ms-transacciones:8082
           predicates:
             - Path=/v3/api-docs/transacciones
           filters:
             - RewritePath=/v3/api-docs/transacciones, /v3/api-docs
         - id: openapi-cuentas
-          uri: http://nexus-ms-cuentas:8083
+          uri: http://ecusol-ms-cuentas:8083
           predicates:
             - Path=/v3/api-docs/cuentas
           filters:
             - RewritePath=/v3/api-docs/cuentas, /v3/api-docs
         - id: openapi-clientes
-          uri: http://nexus-ms-clientes:8084
+          uri: http://ecusol-ms-clientes:8084
           predicates:
             - Path=/v3/api-docs/clientes
           filters:
             - RewritePath=/v3/api-docs/clientes, /v3/api-docs
         - id: openapi-geografia
-          uri: http://nexus-ms-geografia:8081
+          uri: http://ecusol-ms-geografia:8081
           predicates:
             - Path=/v3/api-docs/geografia
           filters:

@@ -1,6 +1,6 @@
 -- =====================================================
 -- SCRIPT DE DATOS INICIALES - EJECUTAR DESPUÉS DEL PRIMER ARRANQUE
--- Comando: docker exec postgres-db-nexus psql -U postgres -f /docker-entrypoint-initdb.d/seed_data.sql
+-- Comando: docker exec postgres-db-ecusol psql -U postgres -f /docker-entrypoint-initdb.d/seed_data.sql
 -- =====================================================
 
 -- Tipos de Cuenta

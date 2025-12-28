@@ -22,7 +22,7 @@ ALTER TABLE IF EXISTS ONLY public.tasaintereshistorico DROP CONSTRAINT IF EXISTS
 ALTER TABLE IF EXISTS ONLY public.empresa DROP CONSTRAINT IF EXISTS fkdu3vo65ufxh4u0ivpg7muvyp0;
 ALTER TABLE IF EXISTS ONLY public.cuenta DROP CONSTRAINT IF EXISTS fkc1gqul8nvx2l0lbicmpuq0lok;
 ALTER TABLE IF EXISTS ONLY public.persona DROP CONSTRAINT IF EXISTS fk550jrw9tdxpowhwx40j8t982w;
-ALTER TABLE IF EXISTS ONLY nexus_web.beneficiario DROP CONSTRAINT IF EXISTS fkn0fgsjhvn0213gmvxpufaqsl3;
+ALTER TABLE IF EXISTS ONLY ecusol_web.beneficiario DROP CONSTRAINT IF EXISTS fkn0fgsjhvn0213gmvxpufaqsl3;
 ALTER TABLE IF EXISTS ONLY public.transaccion DROP CONSTRAINT IF EXISTS ukrjk5soumn6uuftxcc0fn4yug8;
 ALTER TABLE IF EXISTS ONLY public.empresa DROP CONSTRAINT IF EXISTS ukfkso2kbttplho71hoeka6px1s;
 ALTER TABLE IF EXISTS ONLY public.persona DROP CONSTRAINT IF EXISTS uk9cl9xk76vi8d2lk111xg8xc1h;
@@ -35,14 +35,14 @@ ALTER TABLE IF EXISTS ONLY public.persona DROP CONSTRAINT IF EXISTS persona_pkey
 ALTER TABLE IF EXISTS ONLY public.empresa DROP CONSTRAINT IF EXISTS empresa_pkey;
 ALTER TABLE IF EXISTS ONLY public.cuenta DROP CONSTRAINT IF EXISTS cuenta_pkey;
 ALTER TABLE IF EXISTS ONLY public.cliente DROP CONSTRAINT IF EXISTS cliente_pkey;
-ALTER TABLE IF EXISTS ONLY nexus_web.usuarioweb DROP CONSTRAINT IF EXISTS usuarioweb_pkey;
-ALTER TABLE IF EXISTS ONLY nexus_web.usuarioweb DROP CONSTRAINT IF EXISTS uk_qutd6niaar1y48wqneuvd3k4b;
-ALTER TABLE IF EXISTS ONLY nexus_web.beneficiario DROP CONSTRAINT IF EXISTS beneficiario_pkey;
-ALTER TABLE IF EXISTS ONLY nexus_ventanilla.empleado DROP CONSTRAINT IF EXISTS uk_oqf74jqhm1ebgyhxm1hpi47a1;
-ALTER TABLE IF EXISTS ONLY nexus_ventanilla.empleado DROP CONSTRAINT IF EXISTS empleado_pkey;
-ALTER TABLE IF EXISTS nexus_web.usuarioweb ALTER COLUMN usuariowebid DROP DEFAULT;
-ALTER TABLE IF EXISTS nexus_web.beneficiario ALTER COLUMN beneficiarioid DROP DEFAULT;
-ALTER TABLE IF EXISTS nexus_ventanilla.empleado ALTER COLUMN empleadoid DROP DEFAULT;
+ALTER TABLE IF EXISTS ONLY ecusol_web.usuarioweb DROP CONSTRAINT IF EXISTS usuarioweb_pkey;
+ALTER TABLE IF EXISTS ONLY ecusol_web.usuarioweb DROP CONSTRAINT IF EXISTS uk_qutd6niaar1y48wqneuvd3k4b;
+ALTER TABLE IF EXISTS ONLY ecusol_web.beneficiario DROP CONSTRAINT IF EXISTS beneficiario_pkey;
+ALTER TABLE IF EXISTS ONLY ecusol_ventanilla.empleado DROP CONSTRAINT IF EXISTS uk_oqf74jqhm1ebgyhxm1hpi47a1;
+ALTER TABLE IF EXISTS ONLY ecusol_ventanilla.empleado DROP CONSTRAINT IF EXISTS empleado_pkey;
+ALTER TABLE IF EXISTS ecusol_web.usuarioweb ALTER COLUMN usuariowebid DROP DEFAULT;
+ALTER TABLE IF EXISTS ecusol_web.beneficiario ALTER COLUMN beneficiarioid DROP DEFAULT;
+ALTER TABLE IF EXISTS ecusol_ventanilla.empleado ALTER COLUMN empleadoid DROP DEFAULT;
 DROP TABLE IF EXISTS public.transaccion;
 DROP TABLE IF EXISTS public.tipocuenta;
 DROP TABLE IF EXISTS public.tasaintereshistorico;
@@ -51,50 +51,50 @@ DROP TABLE IF EXISTS public.persona;
 DROP TABLE IF EXISTS public.empresa;
 DROP TABLE IF EXISTS public.cuenta;
 DROP TABLE IF EXISTS public.cliente;
-DROP SEQUENCE IF EXISTS nexus_web.usuarioweb_usuariowebid_seq;
-DROP TABLE IF EXISTS nexus_web.usuarioweb;
-DROP SEQUENCE IF EXISTS nexus_web.beneficiario_beneficiarioid_seq;
-DROP TABLE IF EXISTS nexus_web.beneficiario;
-DROP SEQUENCE IF EXISTS nexus_ventanilla.empleado_empleadoid_seq;
-DROP TABLE IF EXISTS nexus_ventanilla.empleado;
-DROP SCHEMA IF EXISTS nexus_web;
-DROP SCHEMA IF EXISTS nexus_ventanilla;
-DROP SCHEMA IF EXISTS nexus_transacciones;
-DROP SCHEMA IF EXISTS nexus_cuentas;
-DROP SCHEMA IF EXISTS nexus_clientes;
+DROP SEQUENCE IF EXISTS ecusol_web.usuarioweb_usuariowebid_seq;
+DROP TABLE IF EXISTS ecusol_web.usuarioweb;
+DROP SEQUENCE IF EXISTS ecusol_web.beneficiario_beneficiarioid_seq;
+DROP TABLE IF EXISTS ecusol_web.beneficiario;
+DROP SEQUENCE IF EXISTS ecusol_ventanilla.empleado_empleadoid_seq;
+DROP TABLE IF EXISTS ecusol_ventanilla.empleado;
+DROP SCHEMA IF EXISTS ecusol_web;
+DROP SCHEMA IF EXISTS ecusol_ventanilla;
+DROP SCHEMA IF EXISTS ecusol_transacciones;
+DROP SCHEMA IF EXISTS ecusol_cuentas;
+DROP SCHEMA IF EXISTS ecusol_clientes;
 --
--- Name: nexus_clientes; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA nexus_clientes;
-
-
---
--- Name: nexus_cuentas; Type: SCHEMA; Schema: -; Owner: -
+-- Name: ecusol_clientes; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA nexus_cuentas;
+CREATE SCHEMA ecusol_clientes;
 
 
 --
--- Name: nexus_transacciones; Type: SCHEMA; Schema: -; Owner: -
+-- Name: ecusol_cuentas; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA nexus_transacciones;
-
-
---
--- Name: nexus_ventanilla; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA nexus_ventanilla;
+CREATE SCHEMA ecusol_cuentas;
 
 
 --
--- Name: nexus_web; Type: SCHEMA; Schema: -; Owner: -
+-- Name: ecusol_transacciones; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA nexus_web;
+CREATE SCHEMA ecusol_transacciones;
+
+
+--
+-- Name: ecusol_ventanilla; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA ecusol_ventanilla;
+
+
+--
+-- Name: ecusol_web; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA ecusol_web;
 
 
 SET default_tablespace = '';
@@ -102,10 +102,10 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: empleado; Type: TABLE; Schema: nexus_ventanilla; Owner: -
+-- Name: empleado; Type: TABLE; Schema: ecusol_ventanilla; Owner: -
 --
 
-CREATE TABLE nexus_ventanilla.empleado (
+CREATE TABLE ecusol_ventanilla.empleado (
     empleadoid integer NOT NULL,
     activo boolean,
     apellidos character varying(255) NOT NULL,
@@ -118,10 +118,10 @@ CREATE TABLE nexus_ventanilla.empleado (
 
 
 --
--- Name: empleado_empleadoid_seq; Type: SEQUENCE; Schema: nexus_ventanilla; Owner: -
+-- Name: empleado_empleadoid_seq; Type: SEQUENCE; Schema: ecusol_ventanilla; Owner: -
 --
 
-CREATE SEQUENCE nexus_ventanilla.empleado_empleadoid_seq
+CREATE SEQUENCE ecusol_ventanilla.empleado_empleadoid_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -131,17 +131,17 @@ CREATE SEQUENCE nexus_ventanilla.empleado_empleadoid_seq
 
 
 --
--- Name: empleado_empleadoid_seq; Type: SEQUENCE OWNED BY; Schema: nexus_ventanilla; Owner: -
+-- Name: empleado_empleadoid_seq; Type: SEQUENCE OWNED BY; Schema: ecusol_ventanilla; Owner: -
 --
 
-ALTER SEQUENCE nexus_ventanilla.empleado_empleadoid_seq OWNED BY nexus_ventanilla.empleado.empleadoid;
+ALTER SEQUENCE ecusol_ventanilla.empleado_empleadoid_seq OWNED BY ecusol_ventanilla.empleado.empleadoid;
 
 
 --
--- Name: beneficiario; Type: TABLE; Schema: nexus_web; Owner: -
+-- Name: beneficiario; Type: TABLE; Schema: ecusol_web; Owner: -
 --
 
-CREATE TABLE nexus_web.beneficiario (
+CREATE TABLE ecusol_web.beneficiario (
     beneficiarioid integer NOT NULL,
     alias character varying(255),
     fecharegistro timestamp(6) without time zone,
@@ -153,10 +153,10 @@ CREATE TABLE nexus_web.beneficiario (
 
 
 --
--- Name: beneficiario_beneficiarioid_seq; Type: SEQUENCE; Schema: nexus_web; Owner: -
+-- Name: beneficiario_beneficiarioid_seq; Type: SEQUENCE; Schema: ecusol_web; Owner: -
 --
 
-CREATE SEQUENCE nexus_web.beneficiario_beneficiarioid_seq
+CREATE SEQUENCE ecusol_web.beneficiario_beneficiarioid_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -166,17 +166,17 @@ CREATE SEQUENCE nexus_web.beneficiario_beneficiarioid_seq
 
 
 --
--- Name: beneficiario_beneficiarioid_seq; Type: SEQUENCE OWNED BY; Schema: nexus_web; Owner: -
+-- Name: beneficiario_beneficiarioid_seq; Type: SEQUENCE OWNED BY; Schema: ecusol_web; Owner: -
 --
 
-ALTER SEQUENCE nexus_web.beneficiario_beneficiarioid_seq OWNED BY nexus_web.beneficiario.beneficiarioid;
+ALTER SEQUENCE ecusol_web.beneficiario_beneficiarioid_seq OWNED BY ecusol_web.beneficiario.beneficiarioid;
 
 
 --
--- Name: usuarioweb; Type: TABLE; Schema: nexus_web; Owner: -
+-- Name: usuarioweb; Type: TABLE; Schema: ecusol_web; Owner: -
 --
 
-CREATE TABLE nexus_web.usuarioweb (
+CREATE TABLE ecusol_web.usuarioweb (
     usuariowebid integer NOT NULL,
     clienteidcore integer NOT NULL,
     emailcontacto character varying(255) NOT NULL,
@@ -190,10 +190,10 @@ CREATE TABLE nexus_web.usuarioweb (
 
 
 --
--- Name: usuarioweb_usuariowebid_seq; Type: SEQUENCE; Schema: nexus_web; Owner: -
+-- Name: usuarioweb_usuariowebid_seq; Type: SEQUENCE; Schema: ecusol_web; Owner: -
 --
 
-CREATE SEQUENCE nexus_web.usuarioweb_usuariowebid_seq
+CREATE SEQUENCE ecusol_web.usuarioweb_usuariowebid_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -203,10 +203,10 @@ CREATE SEQUENCE nexus_web.usuarioweb_usuariowebid_seq
 
 
 --
--- Name: usuarioweb_usuariowebid_seq; Type: SEQUENCE OWNED BY; Schema: nexus_web; Owner: -
+-- Name: usuarioweb_usuariowebid_seq; Type: SEQUENCE OWNED BY; Schema: ecusol_web; Owner: -
 --
 
-ALTER SEQUENCE nexus_web.usuarioweb_usuariowebid_seq OWNED BY nexus_web.usuarioweb.usuariowebid;
+ALTER SEQUENCE ecusol_web.usuarioweb_usuariowebid_seq OWNED BY ecusol_web.usuarioweb.usuariowebid;
 
 
 --
@@ -413,48 +413,48 @@ ALTER TABLE public.transaccion ALTER COLUMN transaccion_id ADD GENERATED BY DEFA
 
 
 --
--- Name: empleado empleadoid; Type: DEFAULT; Schema: nexus_ventanilla; Owner: -
+-- Name: empleado empleadoid; Type: DEFAULT; Schema: ecusol_ventanilla; Owner: -
 --
 
-ALTER TABLE ONLY nexus_ventanilla.empleado ALTER COLUMN empleadoid SET DEFAULT nextval('nexus_ventanilla.empleado_empleadoid_seq'::regclass);
-
-
---
--- Name: beneficiario beneficiarioid; Type: DEFAULT; Schema: nexus_web; Owner: -
---
-
-ALTER TABLE ONLY nexus_web.beneficiario ALTER COLUMN beneficiarioid SET DEFAULT nextval('nexus_web.beneficiario_beneficiarioid_seq'::regclass);
+ALTER TABLE ONLY ecusol_ventanilla.empleado ALTER COLUMN empleadoid SET DEFAULT nextval('ecusol_ventanilla.empleado_empleadoid_seq'::regclass);
 
 
 --
--- Name: usuarioweb usuariowebid; Type: DEFAULT; Schema: nexus_web; Owner: -
+-- Name: beneficiario beneficiarioid; Type: DEFAULT; Schema: ecusol_web; Owner: -
 --
 
-ALTER TABLE ONLY nexus_web.usuarioweb ALTER COLUMN usuariowebid SET DEFAULT nextval('nexus_web.usuarioweb_usuariowebid_seq'::regclass);
+ALTER TABLE ONLY ecusol_web.beneficiario ALTER COLUMN beneficiarioid SET DEFAULT nextval('ecusol_web.beneficiario_beneficiarioid_seq'::regclass);
 
 
 --
--- Data for Name: empleado; Type: TABLE DATA; Schema: nexus_ventanilla; Owner: -
+-- Name: usuarioweb usuariowebid; Type: DEFAULT; Schema: ecusol_web; Owner: -
 --
 
-COPY nexus_ventanilla.empleado (empleadoid, activo, apellidos, nombres, contrasenahash, rol, sucursalid, usuario) FROM stdin;
+ALTER TABLE ONLY ecusol_web.usuarioweb ALTER COLUMN usuariowebid SET DEFAULT nextval('ecusol_web.usuarioweb_usuariowebid_seq'::regclass);
+
+
+--
+-- Data for Name: empleado; Type: TABLE DATA; Schema: ecusol_ventanilla; Owner: -
+--
+
+COPY ecusol_ventanilla.empleado (empleadoid, activo, apellidos, nombres, contrasenahash, rol, sucursalid, usuario) FROM stdin;
 1	t	Sistema	Administrador	$2a$10$RDVXz57eqROgqjp1TSVV6OjT6fFxxsRyXf7K6U/GsgBYHgmhQ7dOy	ADMIN	1	admin
 \.
 
 
 --
--- Data for Name: beneficiario; Type: TABLE DATA; Schema: nexus_web; Owner: -
+-- Data for Name: beneficiario; Type: TABLE DATA; Schema: ecusol_web; Owner: -
 --
 
-COPY nexus_web.beneficiario (beneficiarioid, alias, fecharegistro, nombretitular, numerocuentadestino, tipocuenta, usuariowebid) FROM stdin;
+COPY ecusol_web.beneficiario (beneficiarioid, alias, fecharegistro, nombretitular, numerocuentadestino, tipocuenta, usuariowebid) FROM stdin;
 \.
 
 
 --
--- Data for Name: usuarioweb; Type: TABLE DATA; Schema: nexus_web; Owner: -
+-- Data for Name: usuarioweb; Type: TABLE DATA; Schema: ecusol_web; Owner: -
 --
 
-COPY nexus_web.usuarioweb (usuariowebid, clienteidcore, emailcontacto, estado, fecharegistro, intentosfallidos, contrasenahash, ultimoacceso, usuario) FROM stdin;
+COPY ecusol_web.usuarioweb (usuariowebid, clienteidcore, emailcontacto, estado, fecharegistro, intentosfallidos, contrasenahash, ultimoacceso, usuario) FROM stdin;
 1	1	stephani.rivera@novaseguroslatam.com	ACTIVO	\N	\N	$2a$10$irgfxc8UF3Kt4RgfnsLE4emLKfzgLGhqBfnb16jCRMGAMGXK94voK	2025-12-21 20:01:14.892485	STEPHI
 2	2	rivera1@gmail.com	ACTIVO	\N	\N	$2a$10$pssNLEPQQbtY0AM4AU3t/.KsTQhGIV.urZwuSNxCQTVN0K2aOQ2YK	2025-12-21 20:20:43.654176	ERIVERA
 \.
@@ -537,24 +537,24 @@ COPY public.transaccion (transaccion_id, cuenta_destino, cuenta_origen, descripc
 
 
 --
--- Name: empleado_empleadoid_seq; Type: SEQUENCE SET; Schema: nexus_ventanilla; Owner: -
+-- Name: empleado_empleadoid_seq; Type: SEQUENCE SET; Schema: ecusol_ventanilla; Owner: -
 --
 
-SELECT pg_catalog.setval('nexus_ventanilla.empleado_empleadoid_seq', 1, true);
-
-
---
--- Name: beneficiario_beneficiarioid_seq; Type: SEQUENCE SET; Schema: nexus_web; Owner: -
---
-
-SELECT pg_catalog.setval('nexus_web.beneficiario_beneficiarioid_seq', 1, false);
+SELECT pg_catalog.setval('ecusol_ventanilla.empleado_empleadoid_seq', 1, true);
 
 
 --
--- Name: usuarioweb_usuariowebid_seq; Type: SEQUENCE SET; Schema: nexus_web; Owner: -
+-- Name: beneficiario_beneficiarioid_seq; Type: SEQUENCE SET; Schema: ecusol_web; Owner: -
 --
 
-SELECT pg_catalog.setval('nexus_web.usuarioweb_usuariowebid_seq', 2, true);
+SELECT pg_catalog.setval('ecusol_web.beneficiario_beneficiarioid_seq', 1, false);
+
+
+--
+-- Name: usuarioweb_usuariowebid_seq; Type: SEQUENCE SET; Schema: ecusol_web; Owner: -
+--
+
+SELECT pg_catalog.setval('ecusol_web.usuarioweb_usuariowebid_seq', 2, true);
 
 
 --
@@ -600,42 +600,42 @@ SELECT pg_catalog.setval('public.transaccion_transaccion_id_seq', 3, true);
 
 
 --
--- Name: empleado empleado_pkey; Type: CONSTRAINT; Schema: nexus_ventanilla; Owner: -
+-- Name: empleado empleado_pkey; Type: CONSTRAINT; Schema: ecusol_ventanilla; Owner: -
 --
 
-ALTER TABLE ONLY nexus_ventanilla.empleado
+ALTER TABLE ONLY ecusol_ventanilla.empleado
     ADD CONSTRAINT empleado_pkey PRIMARY KEY (empleadoid);
 
 
 --
--- Name: empleado uk_oqf74jqhm1ebgyhxm1hpi47a1; Type: CONSTRAINT; Schema: nexus_ventanilla; Owner: -
+-- Name: empleado uk_oqf74jqhm1ebgyhxm1hpi47a1; Type: CONSTRAINT; Schema: ecusol_ventanilla; Owner: -
 --
 
-ALTER TABLE ONLY nexus_ventanilla.empleado
+ALTER TABLE ONLY ecusol_ventanilla.empleado
     ADD CONSTRAINT uk_oqf74jqhm1ebgyhxm1hpi47a1 UNIQUE (usuario);
 
 
 --
--- Name: beneficiario beneficiario_pkey; Type: CONSTRAINT; Schema: nexus_web; Owner: -
+-- Name: beneficiario beneficiario_pkey; Type: CONSTRAINT; Schema: ecusol_web; Owner: -
 --
 
-ALTER TABLE ONLY nexus_web.beneficiario
+ALTER TABLE ONLY ecusol_web.beneficiario
     ADD CONSTRAINT beneficiario_pkey PRIMARY KEY (beneficiarioid);
 
 
 --
--- Name: usuarioweb uk_qutd6niaar1y48wqneuvd3k4b; Type: CONSTRAINT; Schema: nexus_web; Owner: -
+-- Name: usuarioweb uk_qutd6niaar1y48wqneuvd3k4b; Type: CONSTRAINT; Schema: ecusol_web; Owner: -
 --
 
-ALTER TABLE ONLY nexus_web.usuarioweb
+ALTER TABLE ONLY ecusol_web.usuarioweb
     ADD CONSTRAINT uk_qutd6niaar1y48wqneuvd3k4b UNIQUE (usuario);
 
 
 --
--- Name: usuarioweb usuarioweb_pkey; Type: CONSTRAINT; Schema: nexus_web; Owner: -
+-- Name: usuarioweb usuarioweb_pkey; Type: CONSTRAINT; Schema: ecusol_web; Owner: -
 --
 
-ALTER TABLE ONLY nexus_web.usuarioweb
+ALTER TABLE ONLY ecusol_web.usuarioweb
     ADD CONSTRAINT usuarioweb_pkey PRIMARY KEY (usuariowebid);
 
 
@@ -736,11 +736,11 @@ ALTER TABLE ONLY public.transaccion
 
 
 --
--- Name: beneficiario fkn0fgsjhvn0213gmvxpufaqsl3; Type: FK CONSTRAINT; Schema: nexus_web; Owner: -
+-- Name: beneficiario fkn0fgsjhvn0213gmvxpufaqsl3; Type: FK CONSTRAINT; Schema: ecusol_web; Owner: -
 --
 
-ALTER TABLE ONLY nexus_web.beneficiario
-    ADD CONSTRAINT fkn0fgsjhvn0213gmvxpufaqsl3 FOREIGN KEY (usuariowebid) REFERENCES nexus_web.usuarioweb(usuariowebid);
+ALTER TABLE ONLY ecusol_web.beneficiario
+    ADD CONSTRAINT fkn0fgsjhvn0213gmvxpufaqsl3 FOREIGN KEY (usuariowebid) REFERENCES ecusol_web.usuarioweb(usuariowebid);
 
 
 --

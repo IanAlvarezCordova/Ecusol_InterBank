@@ -1,0 +1,131 @@
+services:
+  # --- INFRAESTRUCTURA ---
+  postgres-db-ecusol:
+    image: postgres:15-alpine
+    container_name: postgres-db-ecusol
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data_ecusol:/var/lib/postgresql/data
+    ports: [ "5434:5432" ]
+    networks: [ ecusol-net ]
+
+  mongo-db-ecusol:
+    image: mongo:latest
+    container_name: mongo-db-ecusol
+    ports: [ "27019:27017" ]
+    networks: [ ecusol-net ]
+
+  # --- GATEWAY (Puerto 9180) ---
+  ecusol-gateway:
+    build: ./gateway-server
+    container_name: ecusol-gateway
+    ports: [ "9180:8080" ]
+    depends_on:
+      - ecusol-ms-transacciones
+      - ecusol-ms-cuentas
+      - ecusol-ms-clientes
+      - ecusol-ms-geografia
+      - web-backend-ecusol
+      - ventanilla-backend-ecusol
+    environment:
+      - EUREKA_CLIENT_ENABLED=false
+      # NOTA: Las rutas se cargan desde src/main/resources/application.yml
+      # No inyectamos SPRING_CLOUD_GATEWAY_ROUTES por ENV para evitar conflictos.
+    networks: [ ecusol-net ]
+
+  # --- CORE BANCARIO ---
+  ecusol-ms-cuentas:
+    build: ./cbs
+    container_name: ecusol-ms-cuentas
+    environment:
+      - DB_HOST=postgres-db-ecusol
+      - DB_PASSWORD=admin
+      - EUREKA_CLIENT_ENABLED=false
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-ecusol:5432/postgres?currentSchema=ecusol_cuentas
+    networks: [ ecusol-net ]
+
+  ecusol-ms-clientes:
+    build: ./ms-clientes
+    container_name: ecusol-ms-clientes
+    environment:
+      - DB_HOST=postgres-db-ecusol
+      - EUREKA_CLIENT_ENABLED=false
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-ecusol:5432/postgres?currentSchema=ecusol_clientes
+    networks: [ ecusol-net ]
+
+  ecusol-ms-geografia:
+    build: ./ms-geografiaMongo
+    container_name: ecusol-ms-geografia
+    environment:
+      - MONGO_URI=mongodb://mongo-db-ecusol:27017/db_geo_ecusol
+      - EUREKA_CLIENT_ENABLED=false
+    networks: [ ecusol-net ]
+  ecusol-ms-transacciones:
+    build: ./ms-transacciones
+    container_name: ecusol-ms-transacciones
+    environment:
+      - DB_HOST=postgres-db-ecusol
+      - DB_PASSWORD=admin
+      - URL_MS_CUENTAS=http://ecusol-ms-cuentas:8083
+      - URL_MS_GEOGRAFIA=http://ecusol-ms-geografia:8081
+      - URL_MS_CLIENTES=http://ecusol-ms-clientes:8084
+      - EUREKA_CLIENT_ENABLED=false
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-ecusol:5432/postgres?currentSchema=ecusol_transacciones
+      # Switch DIGICONECU en la Nube (IP real del ecosistema)
+      - APP_SWITCH_URL=http://34.44.123.236:8080
+      - APP_SWITCH_NETWORK_URL=http://34.44.123.236:8080
+      - BANCO_CODIGO=ECUSOL
+    ports: [ "8182:8082" ]
+    networks: [ ecusol-net ]
+
+  # --- SERVICIO WEB ---
+  web-backend-ecusol:
+    build: ./Web/BackEnd_Ecusol
+    container_name: web-backend-ecusol
+    environment:
+      - SERVER_PORT=8082
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-ecusol:5432/postgres?currentSchema=ecusol_web
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - ECUSOL_CORE_URL=http://ecusol-gateway:8080/api
+    networks: [ ecusol-net ]
+
+  front-web-ecusol:
+    build: ./Web/Frontend_Ecusol
+    container_name: front-web-ecusol
+    ports: [ "8090:80" ]
+    networks: [ ecusol-net ]
+
+  # --- SERVICIO VENTANILLA ---
+  ventanilla-backend-ecusol:
+    build: ./Ventanilla/BackEnd_VENTANILLA
+    container_name: ventanilla-backend-ecusol
+    ports: [ "8185:8083" ]
+    depends_on:
+      - postgres-db-ecusol
+    environment:
+      - SERVER_PORT=8083
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-ecusol:5432/postgres?currentSchema=ecusol_ventanilla
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - ECUSOL_CORE_URL=http://ecusol-gateway:8080/api/core
+    networks: [ ecusol-net ]
+
+  front-ventanilla-ecusol:
+    build: ./Ventanilla/FrontEnd_Ecusol
+    container_name: front-ventanilla-ecusol
+    ports: [ "82:80" ]
+    networks: [ ecusol-net ]
+
+networks:
+  ecusol-net:
+    driver: bridge
+
+volumes:
+  postgres_data_ecusol:

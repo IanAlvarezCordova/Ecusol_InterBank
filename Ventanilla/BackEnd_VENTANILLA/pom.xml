@@ -9,7 +9,7 @@
     </parent>
 
     <groupId>com.ecusol</groupId>
-    <artifactId>ventanilla-backend</artifactId>
+    <artifactId>ventanilla-backend-ecusol</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>EcuSol Ventanilla</name>
 

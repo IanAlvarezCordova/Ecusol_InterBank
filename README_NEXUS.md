@@ -34,7 +34,7 @@ docker exec -i postgres-db-nexus psql -U postgres < backup_nexus_completo.sql
 |--------|-----|----------------------|
 | **Ventanilla (Frontend)** | [http://localhost:81](http://localhost:81) | `admin` / `admin` |
 | **Banca Web (Frontend)** | [http://localhost:80](http://localhost:80) | (Tus usuarios registrados) |
-| **Gateway / API** | [http://localhost:9080](http://localhost:9080) | N/A |
+| **Gateway / API** | [http://localhost:9180](http://localhost:9180) | N/A |
 
 ---
 

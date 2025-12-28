@@ -24,20 +24,20 @@ Cuando subas el proyecto a un servidor real, ten en cuenta estos puntos:
 En el servidor de producción, ya NO usarás `ngrok`. Deberás usar la IP pública o el dominio del servidor:
 
 1. **En `docker-compose.yml`**:
-   - Asegúrate de que `APP_SWITCH_URL` apunte a la IP final del Switch (`34.44.123.236:9080`).
+   - Asegúrate de que `APP_SWITCH_URL` apunte a la IP final del Switch (`34.44.123.236:9180`).
    - El código banco debe ser exactamente `NEXUS`.
 
 2. **Registro en el Switch**:
    - Una vez desplegado, debes entrar al servidor del Switch y actualizar el `Endpoint` del banco NEXUS con la IP de tu servidor real:
    ```sql
-   UPDATE "Bancos" SET "Endpoint" = 'http://TU-IP-SERVIDOR:9080/api/transacciones/webhook' WHERE "Codigo" = 'NEXUS';
+   UPDATE "Bancos" SET "Endpoint" = 'http://TU-IP-SERVIDOR:9180/api/transacciones/webhook' WHERE "Codigo" = 'NEXUS';
    ```
 
 ### 🔓 Puertos y Firewall
 El servidor de la nube debe tener abiertos los siguientes puertos en su Firewall:
 - **8080**: Frontend Banca Web
 - **81**: Frontend Ventanilla
-- **9080**: API Gateway (Muy importante para el webhook de entrada)
+- **9180**: API Gateway (Muy importante para el webhook de entrada)
 
 ---
 

@@ -12,11 +12,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.banconexus.cbs</groupId>
+    <groupId>com.bancoecusol.cbs</groupId>
     <artifactId>ms-clientes</artifactId>
     <version>0.1</version>
     <name>ms-clientes</name>
-    <description>Microservicio de clientes del Core Bancario Nexus</description>
+    <description>Microservicio de clientes del Core Bancario ecusol</description>
     <packaging>jar</packaging>
 
     <properties>
