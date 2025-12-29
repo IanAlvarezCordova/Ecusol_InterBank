@@ -220,6 +220,4 @@ ms-transacciones/
 
 ## 📞 Contacto
 
-**Equipo NEXUS**  
-Responsable: Stephani Rivera  
-Fecha integración: 21 Diciembre 2025
+
