@@ -8,15 +8,17 @@ export default {
     extend: {
       colors: {
         ecusol: {
-          primario: '#1A5D3B',    // Verde Oscuro ecusol
-          secundario: '#D4AF37',  // Dorado ecusol
-          terciario: '#E8B923',   // Amarillo Dorado
-          fondo: '#F4F6F8',       // Gris suave para fondos
-          texto: '#1F2937',       // Gris oscuro para lectura
+          primario: '#1E3A8A',      // Azul oscuro elegante
+          secundario: '#FCD34D',    // Amarillo dorado
+          terciario: '#FBBF24',     // Amarillo brillante
+          fondo: '#F0F9FF',         // Azul muy claro para fondos
+          texto: '#1E293B',         // Gris azulado oscuro
           rojo: '#DC2626',
           verde: '#16A34A',
-          'gris-claro': '#F3F4F6', // Gris muy suave para fondos
-          'gris-oscuro': '#374151' // Gris oscuro para textos secundarios
+          'gris-claro': '#F1F5F9',  // Gris azulado suave
+          'gris-oscuro': '#475569', // Gris azulado oscuro
+          'azul-medio': '#3B82F6',   // Azul medio para enlaces
+          'amarillo-claro': '#FEF3C7' // Amarillo suave
         }
       },
       fontFamily: {

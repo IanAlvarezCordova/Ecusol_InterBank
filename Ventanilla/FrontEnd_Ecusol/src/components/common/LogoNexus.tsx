@@ -1,6 +1,6 @@
 // src/components/common/LogoNexus.tsx
 import React from 'react';
-import logoNexus from '@/assets/logo.jpeg'; 
+import logoNexus from '@/assets/logo.jpg'; 
 
 interface LogoNexusProps {
   className?: string;

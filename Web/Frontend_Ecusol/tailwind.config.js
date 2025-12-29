@@ -8,16 +8,18 @@ export default {
     extend: {
       colors: {
         ecusol: {
-          primario: '#0a652c',    
-          secundario: '#c7a335',   
-          acento: '#F4F7FA',       
-          texto: '#1A1A1A',        
+          primario: '#1E3A8A',      // Azul oscuro elegante
+          secundario: '#FCD34D',    // Amarillo dorado
+          acento: '#F0F9FF',        // Azul muy claro para fondos
+          texto: '#1E293B',         // Gris azulado oscuro para texto
 
-          rojo: '#D32F2F',
-          verde: '#388E3C',
+          rojo: '#DC2626',
+          verde: '#16A34A',
 
-          'gris-claro': '#F3F4F6',
-          'gris-oscuro': '#374151'
+          'gris-claro': '#F1F5F9',
+          'gris-oscuro': '#475569',
+          'azul-medio': '#3B82F6',   // Azul medio para enlaces
+          'amarillo-claro': '#FEF3C7' // Amarillo suave
         }
       },
       fontFamily: {
