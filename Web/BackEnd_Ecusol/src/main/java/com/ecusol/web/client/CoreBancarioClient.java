@@ -98,7 +98,8 @@ public class CoreBancarioClient {
         try {
             return webClient.get().uri("/sucursales").retrieve().bodyToFlux(SucursalDTO.class).collectList().block();
         } catch (Exception e) {
-            return List.of();
+            e.printStackTrace();
+            throw new RuntimeException("Error obteniendo sucursales: " + e.getMessage());
         }
     }
 

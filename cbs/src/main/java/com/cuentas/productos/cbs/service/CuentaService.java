@@ -91,7 +91,9 @@ public class CuentaService {
         }
 
         cuenta.setSaldo(cuenta.getSaldo().subtract(monto));
-        cuentaRepo.save(cuenta);
+        Cuenta guardada = cuentaRepo.save(cuenta);
+        System.out.println(">>> DEBITO REALIZADO: Cuenta=" + numeroCuenta + " | Monto=" + monto + " | NuevoSaldo="
+                + guardada.getSaldo());
     }
 
     @Transactional
@@ -100,7 +102,9 @@ public class CuentaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cuenta no encontrada: " + numeroCuenta));
 
         cuenta.setSaldo(cuenta.getSaldo().add(monto));
-        cuentaRepo.save(cuenta);
+        Cuenta guardada = cuentaRepo.save(cuenta);
+        System.out.println(">>> CREDITO REALIZADO: Cuenta=" + numeroCuenta + " | Monto=" + monto + " | NuevoSaldo="
+                + guardada.getSaldo());
     }
 
     private String generarNumeroCuenta() {

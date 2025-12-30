@@ -205,4 +205,43 @@ public class Transaccion {
     public void setVersion(Long version) {
         this.version = version;
     }
+    // --- EQUALS, HASHCODE, TOSTRING MANUALES ---
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        Transaccion that = (Transaccion) o;
+
+        return transaccionId != null ? transaccionId.equals(that.transaccionId) : that.transaccionId == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return transaccionId != null ? transaccionId.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "Transaccion{" +
+                "transaccionId=" + transaccionId +
+                ", cuentaOrigen='" + cuentaOrigen + '\'' +
+                ", cuentaDestino='" + cuentaDestino + '\'' +
+                ", monto=" + monto +
+                ", descripcion='" + descripcion + '\'' +
+                ", estado='" + estado + '\'' +
+                ", rolTransaccion='" + rolTransaccion + '\'' +
+                ", tipo='" + tipo + '\'' +
+                ", fechaEjecucion=" + fechaEjecucion +
+                ", instructionId='" + instructionId + '\'' +
+                ", referencia='" + referencia + '\'' +
+                ", idBancoOrigen=" + idBancoOrigen +
+                ", idBancoDestino=" + idBancoDestino +
+                ", codigoBicDestino='" + codigoBicDestino + '\'' +
+                ", mensajeError='" + mensajeError + '\'' +
+                '}';
+    }
 }

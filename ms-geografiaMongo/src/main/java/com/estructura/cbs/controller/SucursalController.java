@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/sucursal")
+@RequestMapping({ "/api/sucursal", "/api/sucursales" })
 public class SucursalController {
 
     private final SucursalService service;
@@ -42,7 +42,7 @@ public class SucursalController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(@PathVariable Integer id,
-                                        @RequestBody SucursalDTO dto) {
+            @RequestBody SucursalDTO dto) {
         return service.actualizar(id, dto);
     }
 
