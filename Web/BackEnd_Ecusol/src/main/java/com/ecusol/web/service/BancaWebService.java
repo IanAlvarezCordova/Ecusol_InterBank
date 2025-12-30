@@ -40,16 +40,16 @@ public class BancaWebService {
 
     public List<MovimientoWebDTO> misMovimientos(String cuenta) {
         var movsCore = coreClient.obtenerMovimientos(cuenta);
-        
+
         // Si no hay movimientos, retornar lista vacía
         if (movsCore == null || movsCore.isEmpty()) {
             return new java.util.ArrayList<>();
         }
-        
+
         // Obtener saldo actual de la cuenta
         var cuentaInfo = coreClient.buscarCuenta(cuenta);
         BigDecimal saldoActual = cuentaInfo != null ? cuentaInfo.getSaldo() : BigDecimal.ZERO;
-        
+
         // Obtener movimientos de transacciones para mapear tipo
         var movsTx = txClient.obtenerMovimientosPorCuenta(cuenta);
         var mapaTipos = movsTx.stream()
@@ -57,25 +57,25 @@ public class BancaWebService {
                         MovimientoTxDTO::transaccionId,
                         m -> m.tipo() != null ? m.tipo() : "TRANSFERENCIA",
                         (a, b) -> a));
-        
+
         // Ordenar movimientos por fecha ascendente
         var movsOrdenados = movsCore.stream()
                 .filter(m -> m != null && m.getMonto() != null && m.getFechaEjecucion() != null)
                 .sorted((a, b) -> a.getFechaEjecucion().compareTo(b.getFechaEjecucion()))
                 .collect(Collectors.toList());
-        
+
         if (movsOrdenados.isEmpty()) {
             return new java.util.ArrayList<>();
         }
-        
+
         // Construir lista con saldos calculados
         // El saldoNuevo es el saldo DESPUÉS de cada movimiento
         List<MovimientoWebDTO> resultado = new java.util.ArrayList<>();
-        
+
         // Primero, calcular saldos hacia adelante partiendo del saldo actual
         // Necesitamos ir hacia atrás para obtener el saldo inicial
         BigDecimal saldoCalculado = saldoActual.stripTrailingZeros();
-        
+
         // Iterar hacia atrás para calcular el saldo inicial
         for (int i = movsOrdenados.size() - 1; i >= 0; i--) {
             var mov = movsOrdenados.get(i);
@@ -86,7 +86,7 @@ public class BancaWebService {
                 saldoCalculado = saldoCalculado.add(mov.getMonto());
             }
         }
-        
+
         // Ahora saldoCalculado contiene el saldo inicial
         // Recorrer hacia adelante construyendo los DTOs
         for (var mov : movsOrdenados) {
@@ -97,10 +97,10 @@ public class BancaWebService {
             } else {
                 saldoCalculado = saldoCalculado.subtract(monto);
             }
-            
+
             // Enrich con operacion desde transacciones
             String operacion = mapaTipos.getOrDefault(mov.getTransaccionId(), "TRANSFERENCIA");
-            
+
             resultado.add(new MovimientoWebDTO(
                     mov.getFechaEjecucion(),
                     mov.getTipo(),
@@ -109,7 +109,7 @@ public class BancaWebService {
                     mov.getDescripcion(),
                     operacion));
         }
-        
+
         // Invertir para mostrar del más reciente al más antiguo
         java.util.Collections.reverse(resultado);
         return resultado;
@@ -119,11 +119,11 @@ public class BancaWebService {
         Map<String, Object> debug = new java.util.HashMap<>();
         var movsCore = coreClient.obtenerMovimientos(cuenta);
         var cuentaInfo = coreClient.buscarCuenta(cuenta);
-        
+
         debug.put("cuenta", cuenta);
         debug.put("movimientosCount", movsCore != null ? movsCore.size() : 0);
         debug.put("saldoActual", cuentaInfo != null ? cuentaInfo.getSaldo() : null);
-        
+
         if (movsCore != null && !movsCore.isEmpty()) {
             List<Map<String, Object>> movs = new java.util.ArrayList<>();
             for (var m : movsCore) {
@@ -138,7 +138,7 @@ public class BancaWebService {
             }
             debug.put("movimientos", movs);
         }
-        
+
         return debug;
     }
 
@@ -146,7 +146,8 @@ public class BancaWebService {
         // Map bancoDestinoCodigo string to ID
         // 2 = EcuSol (Interno), 1 = Otros Bancos
         Integer bancoDestinoId = ("ECUASOL".equalsIgnoreCase(req.bancoDestinoCodigo())
-                || "ECUSOL".equalsIgnoreCase(req.bancoDestinoCodigo()))
+                || "ECUSOL".equalsIgnoreCase(req.bancoDestinoCodigo())
+                || "ECUSOL_BK".equalsIgnoreCase(req.bancoDestinoCodigo()))
                         ? 2
                         : 1;
         return coreClient.realizarTransferencia(req, bancoDestinoId);
@@ -154,7 +155,9 @@ public class BancaWebService {
 
     public TitularCuentaDTO validarDestinatarioCompleto(String numeroCuenta, String banco) {
         // Si el banco no es ECUSOL/ECUASOL, es interbancario
-        boolean esInterno = "ECUASOL".equalsIgnoreCase(banco) || "ECUSOL".equalsIgnoreCase(banco);
+        boolean esInterno = "ECUASOL".equalsIgnoreCase(banco) ||
+                "ECUSOL".equalsIgnoreCase(banco) ||
+                "ECUSOL_BK".equalsIgnoreCase(banco);
 
         if (!esInterno) {
             // Para interbancarios, no podemos validar en nuestro CORE

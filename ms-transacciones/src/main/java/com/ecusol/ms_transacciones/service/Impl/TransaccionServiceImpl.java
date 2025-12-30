@@ -6,13 +6,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecusol.ms_transacciones.client.CuentaClient;
-import com.ecusol.ms_transacciones.client.SwitchClient;
+import com.ecusol.ms_transacciones.infrastructure.outbound.SwitchClient;
 import com.ecusol.ms_transacciones.dto.*;
+import com.ecusol.ms_transacciones.dto.iso.IsoMensajeDTO;
+import com.ecusol.ms_transacciones.dto.iso.IsoMensajeDTO.*;
 import com.ecusol.ms_transacciones.mapper.TransaccionMapper;
 import com.ecusol.ms_transacciones.model.Transaccion;
 import com.ecusol.ms_transacciones.repository.TransaccionRepository;
 import com.ecusol.ms_transacciones.service.TransaccionService;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -61,13 +64,42 @@ public class TransaccionServiceImpl implements TransaccionService {
                 log.info("✅ Transferencia INTERNA completada: {} -> {}",
                         tx.getCuentaOrigen(), tx.getCuentaDestino());
             } else {
-                // --- TRANSFERENCIA EXTERNA (NO PERMITIDA) ---
-                String bancoDestino = solicitud.getBancoDestinoCodigo() != null
-                        ? solicitud.getBancoDestinoCodigo()
-                        : "DESCONOCIDO";
-                
-                log.warn("❌ Transferencia EXTERNA rechazada: EcuSol solo permite transferencias internas. Banco destino: {}", bancoDestino);
-                throw new RuntimeException("Las transferencias externas a otros bancos no están habilitadas. Solo se permiten transferencias internas dentro de EcuSol.");
+                // --- TRANSFERENCIA EXTERNA ---
+                log.info(">>>> INICIANDO TRANSFERENCIA EXTERNA a {}", solicitud.getBancoDestinoCodigo());
+
+                // 1. Preparar Header
+                IsoHeader header = new IsoHeader(
+                        tx.getInstructionId(),
+                        LocalDateTime.now().toString(),
+                        switchClient.getBancoCodigo());
+
+                // 2. Preparar Body
+                IsoBody body = new IsoBody();
+                body.setInstructionId(tx.getInstructionId());
+                body.setEndToEndId(tx.getReferencia());
+                body.setAmount(new IsoAmount("USD", tx.getMonto()));
+
+                IsoDebtor debtor = new IsoDebtor();
+                debtor.setName("Cliente EcuSol");
+                debtor.setAccountId(tx.getCuentaOrigen());
+                debtor.setAccountType("AHORROS");
+                body.setDebtor(debtor);
+
+                IsoCreditor creditor = new IsoCreditor();
+                creditor.setName("Beneficiario BO");
+                creditor.setAccountId(tx.getCuentaDestino());
+                creditor.setAccountType("AHORROS");
+                creditor.setTargetBankId(solicitud.getBancoDestinoCodigo());
+                body.setCreditor(creditor);
+
+                body.setRemittanceInformation(tx.getDescripcion());
+
+                IsoMensajeDTO isoMensaje = new IsoMensajeDTO(header, body);
+
+                // 3. Enviar al Switch
+                switchClient.enviarTransferencia(isoMensaje);
+
+                log.info("✅ Transferencia EXTERNA enviada al Switch exitosamente");
             }
 
             // Éxito

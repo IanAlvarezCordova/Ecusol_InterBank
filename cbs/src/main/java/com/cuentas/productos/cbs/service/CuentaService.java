@@ -104,7 +104,9 @@ public class CuentaService {
     }
 
     private String generarNumeroCuenta() {
-        return String.valueOf(System.currentTimeMillis()).substring(3);
+        // BIN asignado: 370100 + 10 dígitos aleatorios (Total 16)
+        long random = (long) (Math.random() * 9000000000L) + 1000000000L;
+        return "370100" + random;
     }
 
     /**

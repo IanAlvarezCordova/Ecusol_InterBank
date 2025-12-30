@@ -8,11 +8,9 @@ import { CheckCircle2, User, Users, Loader2, AlertTriangle, Wallet, ArrowRight, 
 import { toast } from 'react-hot-toast';
 
 const BANCOS_TERCEROS = [
-  { id: 'ECUASOL', nombre: 'Nexus', color: 'bg-blue-600' },
-  { id: 'ECUSOL', nombre: 'Ecusol', color: 'bg-green-500' },
-  { id: 'ARCBANK', nombre: 'ArcBank', color: 'bg-orange-500' },
-  { id: 'BANTEC', nombre: 'BanTec', color: 'bg-purple-500' },
-  { id: 'OTRO', nombre: 'Otro', color: 'bg-gray-500' }
+  { id: 'NEXUS_BK', nombre: 'Nexus', color: 'bg-blue-600' },
+  { id: 'ARCBANK_BK', nombre: 'ArcBank', color: 'bg-orange-500' },
+  { id: 'BANTEC_BK', nombre: 'BanTec', color: 'bg-purple-500' }
 ];
 
 const PaginaTransferencia = () => {
@@ -22,14 +20,14 @@ const PaginaTransferencia = () => {
   const [beneficiarios, setBeneficiarios] = useState<Beneficiario[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modos: 'ECUASOL' (antes PROPIAS) | 'INTERBANCARIA' (antes TERCEROS)
+  // Modos: 'ECUASOL' (Cuentas Propias/Internas) | 'INTERBANCARIA' (Otros Bancos)
   const [modo, setModo] = useState<'ECUASOL' | 'INTERBANCARIA'>('ECUASOL');
 
   // Nuevo: Subtipo para transferencias internas
   // Default a TERCERO para que no salgan "mis cuentas" de una
   const [tipoInterno, setTipoInterno] = useState<'PROPIA' | 'TERCERO'>('TERCERO');
 
-  const [banco, setBanco] = useState<string>('ECUASOL');
+  const [banco, setBanco] = useState<string>('NEXUS_BANK'); // Default external
   const [origen, setOrigen] = useState('');
 
   // Destinos
@@ -81,10 +79,29 @@ const PaginaTransferencia = () => {
     if (!cuentaAValidar || cuentaAValidar.length < 5) return;
     setValidando(true);
     setDestinatarioData(null);
+
+    // Si estamos en modo Interbancario y el banco NO es Ecusol, simulamos éxito (No podemos validar cuentas externas)
+    const esExterno = modo === 'INTERBANCARIA' || (modo === 'ECUASOL' && banco !== 'ECUSOL_BK' && false); // Logic simplification: Modo ECUASOL is internal.
+
+    if (modo === 'INTERBANCARIA') {
+      // Simulación de éxito para bancos externos
+      setTimeout(() => {
+        setDestinatarioData({
+          nombreTitular: "Beneficiario Externo (" + banco + ")",
+          cedulaParcial: "******",
+          tipoCuenta: "Cuenta Externa",
+          numeroCuenta: cuentaAValidar
+        });
+        if (cuentaAValidar !== destinoManual) setDestinoManual(cuentaAValidar);
+        toast.success("Cuenta válida (Formato)");
+        setValidando(false);
+      }, 800);
+      return;
+    }
+
     try {
-      // Si es EcuSol, el banco es ECUASOL implicito (Ecusol en UI)
-      const bancoDestino = modo === 'ECUASOL' ? 'ECUASOL' : banco;
-      const data = await bancaService.validarDestinatario(cuentaAValidar, bancoDestino);
+      // Si es EcuSol (Interno), validamos real
+      const data = await bancaService.validarDestinatario(cuentaAValidar, 'ECUSOL_BK');
       setDestinatarioData(data);
       if (cuentaAValidar !== destinoManual) setDestinoManual(cuentaAValidar);
       toast.success("Cuenta verificada: " + data.nombreTitular);
@@ -179,7 +196,7 @@ const PaginaTransferencia = () => {
 
       if (modo === 'ECUASOL') {
         finalDestino = tipoInterno === 'PROPIA' ? destinoPropio : destinoManual;
-        bancoFinal = 'ECUSOL';
+        bancoFinal = 'ECUSOL_BK';
       } else {
         finalDestino = destinoManual;
         bancoFinal = banco;

@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.ecusol.ms_transacciones.client.CuentaClient;
-import com.ecusol.ms_transacciones.client.SwitchClient;
+import com.ecusol.ms_transacciones.infrastructure.outbound.SwitchClient;
 import com.ecusol.ms_transacciones.dto.BancoDTO;
 import com.ecusol.ms_transacciones.dto.SwitchWebhookPayload;
 import com.ecusol.ms_transacciones.dto.SwitchWebhookResponse;

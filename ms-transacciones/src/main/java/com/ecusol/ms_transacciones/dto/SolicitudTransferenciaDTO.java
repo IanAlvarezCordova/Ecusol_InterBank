@@ -39,7 +39,7 @@ public class SolicitudTransferenciaDTO {
     private String descripcion;
 
     /**
-    * Determina si la transferencia es interna (mismo banco ECUSOL) o externa
+     * Determina si la transferencia es interna (mismo banco ECUSOL) o externa
      * (interbancaria).
      */
     public boolean esTransferenciaInterna() {
@@ -51,6 +51,9 @@ public class SolicitudTransferenciaDTO {
             // Si no viene código de banco, asumimos que es interna (o verificamos por ID)
             return bancoDestinoId == null || bancoDestinoId == 2;
         }
-        return "ECUSOL".equalsIgnoreCase(bancoDestinoCodigo) || "NEXUS".equalsIgnoreCase(bancoDestinoCodigo);
+        return "ECUSOL".equalsIgnoreCase(bancoDestinoCodigo) ||
+                "ECUSOL_BK".equalsIgnoreCase(bancoDestinoCodigo) ||
+                "NEXUS".equalsIgnoreCase(bancoDestinoCodigo) ||
+                "NEXUS_BK".equalsIgnoreCase(bancoDestinoCodigo);
     }
 }
