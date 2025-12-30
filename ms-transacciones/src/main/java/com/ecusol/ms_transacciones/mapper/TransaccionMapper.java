@@ -20,6 +20,10 @@ public interface TransaccionMapper {
     @Mapping(target = "idBancoDestino", source = "bancoDestinoId")
     @Mapping(target = "instructionId", ignore = true)
     @Mapping(target = "version", ignore = true)
+    @Mapping(target = "fechaEjecucion", ignore = true)
+    @Mapping(target = "referencia", ignore = true)
+    @Mapping(target = "codigoBicDestino", ignore = true)
+    @Mapping(target = "mensajeError", ignore = true)
     Transaccion solicitudToEntity(SolicitudTransferenciaDTO dto);
 
     // Entidad -> Switch JSON
@@ -39,9 +43,16 @@ public interface TransaccionMapper {
     @Mapping(target = "referencia", source = "endToEnd")
     @Mapping(target = "estado", source = "estadoActual")
     @Mapping(target = "descripcion", source = "mensaje")
-    @Mapping(target = "rolTransaccion", constant = "CREDITO")
     @Mapping(target = "tipo", constant = "TRANSFERENCIA")
     @Mapping(target = "version", ignore = true)
+    @Mapping(target = "fechaEjecucion", ignore = true)
+    // El switch nos manda ID banco en la trama? No siempre explicitamente, asumimos
+    // lógica externa
+    @Mapping(target = "idBancoOrigen", ignore = true)
+    @Mapping(target = "idBancoDestino", ignore = true)
+    @Mapping(target = "codigoBicDestino", ignore = true)
+    @Mapping(target = "mensajeError", ignore = true)
+    @Mapping(target = "rolTransaccion", constant = "CREDITO")
     Transaccion switchDtoToEntity(SwitchTransaccionDTO dto);
 
     // Entidad -> Respuesta Cliente
