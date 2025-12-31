@@ -33,9 +33,9 @@ jobs:
             
             # 4. Reconstruir y levantar contenedores
             # Eliminamos contenedores huérfanos para limpiar
-            docker compose up -d --build --remove-orphans
+            docker compose up -d --build -d
             
             # Opcional: Limpieza de sistema para ahorrar espacio en la EC2
-            docker system prune -f
+           
             
             echo "¡Despliegue completado!"

@@ -37,54 +37,71 @@ public class TransaccionInterbancariaController {
     @Operation(summary = "Recibir transferencia entrante desde otro banco via Switch")
     @PostMapping("/webhook")
     public ResponseEntity<SwitchWebhookResponse> recibirTransferenciaEntrante(
-            @RequestBody SwitchWebhookPayload payload) {
+            @RequestBody com.ecusol.ms_transacciones.dto.iso.IsoMensajeDTO msg) {
+
+        String bancoOrigen = msg.getHeader() != null ? msg.getHeader().getOriginatingBankId() : "DESCONOCIDO";
+        String cuentaOrigen = msg.getBody() != null && msg.getBody().getDebtor() != null
+                ? msg.getBody().getDebtor().getAccountId()
+                : "DESCONOCIDO";
+        String cuentaDestino = msg.getBody() != null && msg.getBody().getCreditor() != null
+                ? msg.getBody().getCreditor().getAccountId()
+                : "DESCONOCIDO";
+        java.math.BigDecimal monto = msg.getBody() != null && msg.getBody().getAmount() != null
+                ? msg.getBody().getAmount().getValue()
+                : java.math.BigDecimal.ZERO;
+        String referencia = msg.getBody() != null ? msg.getBody().getInstructionId() : "REF-UNKNOWN";
+        String concepto = msg.getBody() != null ? msg.getBody().getRemittanceInformation() : "Transferencia Entrante";
+
         log.info("📥 Webhook recibido desde {}: {} -> {} por ${}",
-                payload.getBancoOrigen(),
-                payload.getCuentaOrigen(),
-                payload.getCuentaDestino(),
-                payload.getMonto());
+                bancoOrigen,
+                cuentaOrigen,
+                cuentaDestino,
+                monto);
 
         try {
             // 1. Verificar idempotencia (no procesar duplicados)
-            if (payload.getReferencia() != null &&
-                    repository.existsByInstructionId(payload.getReferencia())) {
-                log.warn("⚠️ Transferencia duplicada ignorada: {}", payload.getReferencia());
+            if (referencia != null &&
+                    repository.existsByInstructionId(referencia)) {
+                log.warn("⚠️ Transferencia duplicada ignorada: {}", referencia);
                 return ResponseEntity.ok(new SwitchWebhookResponse(
                         "ACK",
                         "Transferencia ya procesada previamente",
-                        payload.getReferencia()));
+                        referencia));
             }
 
             // 2. Acreditar la cuenta destino
-            cuentaClient.acreditar(payload.getCuentaDestino(), payload.getMonto());
+            cuentaClient.acreditar(cuentaDestino, monto);
 
             // 3. Registrar la transacción entrante
             Transaccion tx = new Transaccion();
-            tx.setInstructionId(payload.getReferencia());
-            tx.setReferencia(payload.getReferencia());
-            tx.setCuentaOrigen(payload.getCuentaOrigen());
-            tx.setCuentaDestino(payload.getCuentaDestino());
-            tx.setMonto(payload.getMonto());
-            tx.setDescripcion(payload.getConcepto() != null ? payload.getConcepto()
-                    : "Transferencia recibida de " + payload.getBancoOrigen());
+            tx.setInstructionId(referencia);
+            tx.setReferencia(referencia);
+            tx.setCuentaOrigen(cuentaOrigen);
+            tx.setCuentaDestino(cuentaDestino);
+            tx.setMonto(monto);
+            tx.setDescripcion(concepto != null ? concepto
+                    : "Transferencia recibida de " + bancoOrigen);
             tx.setEstado("COMPLETED");
             tx.setRolTransaccion("CREDITO");
             tx.setFechaEjecucion(LocalDateTime.now());
+            // Guardamos el banco origen también si la entidad lo soporta (opcional)
+            // tx.setIdBancoOrigen(...);
+
             repository.save(tx);
 
-            log.info("✅ Transferencia acreditada exitosamente en cuenta {}", payload.getCuentaDestino());
+            log.info("✅ Transferencia acreditada exitosamente en cuenta {}", cuentaDestino);
 
             return ResponseEntity.ok(new SwitchWebhookResponse(
                     "ACK",
                     "Transferencia procesada exitosamente",
-                    payload.getReferencia()));
+                    referencia));
 
         } catch (Exception e) {
             log.error("❌ Error procesando webhook: {}", e.getMessage());
             return ResponseEntity.status(422).body(new SwitchWebhookResponse(
                     "NACK",
                     "Error: " + e.getMessage(),
-                    payload.getReferencia()));
+                    referencia));
         }
     }
 
