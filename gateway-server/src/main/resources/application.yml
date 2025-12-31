@@ -1,6 +1,13 @@
 server:
   port: 8080
 
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.http.server.reactive: DEBUG
+    reactor.ipc.netty: DEBUG
+    
 spring:
   application:
     name: ecusol-gateway
