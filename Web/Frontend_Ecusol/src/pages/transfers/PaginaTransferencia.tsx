@@ -8,9 +8,9 @@ import { CheckCircle2, User, Users, Loader2, AlertTriangle, Wallet, ArrowRight, 
 import { toast } from 'react-hot-toast';
 
 const BANCOS_TERCEROS = [
-  { id: 'NEXUS_BK', nombre: 'Nexus', color: 'bg-blue-600' },
-  { id: 'ARCBANK_BK', nombre: 'ArcBank', color: 'bg-orange-500' },
-  { id: 'BANTEC_BK', nombre: 'BanTec', color: 'bg-purple-500' }
+  { id: 'NEXUS_BANK', nombre: 'Nexus', color: 'bg-blue-600' },
+  { id: 'ARCBANK', nombre: 'ArcBank', color: 'bg-orange-500' },
+  { id: 'BANTEC', nombre: 'BanTec', color: 'bg-purple-500' }
 ];
 
 const PaginaTransferencia = () => {
