@@ -78,7 +78,7 @@ services:
       # Switch DIGICONECU en la Nube (IP real del ecosistema)
       - APP_SWITCH_URL=https://switch-interbank.ddns.net/api/v1/transacciones
       - APP_SWITCH_NETWORK_URL=https://switch-interbank.ddns.net/api/v1/transacciones
-      - BANCO_CODIGO=ECUSOL
+      - BANCO_CODIGO=ECUSOL_BK
     ports: [ "8182:8082" ]
     networks: [ ecusol-net ]
 

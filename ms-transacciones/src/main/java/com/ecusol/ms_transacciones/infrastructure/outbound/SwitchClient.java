@@ -50,9 +50,9 @@ public class SwitchClient {
 
     public List<BancoDTO> obtenerBancos() {
         return List.of(
-                new BancoDTO("NEXUS_BK", "Banco Nexus"),
-                new BancoDTO("ARCBANK_BK", "ArcBank"),
-                new BancoDTO("BANTEC_BK", "BanTec"));
+                new BancoDTO("NEXUS_BANK", "Banco Nexus"),
+                new BancoDTO("ARCBANK", "ArcBank"),
+                new BancoDTO("BANTEC", "BanTec"));
     }
 
     public String getBancoCodigo() {
