@@ -52,8 +52,6 @@ public class SolicitudTransferenciaDTO {
             return bancoDestinoId == null || bancoDestinoId == 2;
         }
         return "ECUSOL".equalsIgnoreCase(bancoDestinoCodigo) ||
-                "ECUSOL_BK".equalsIgnoreCase(bancoDestinoCodigo) ||
-                "NEXUS".equalsIgnoreCase(bancoDestinoCodigo) ||
-                "NEXUS_BK".equalsIgnoreCase(bancoDestinoCodigo);
+                "ECUSOL_BK".equalsIgnoreCase(bancoDestinoCodigo);
     }
 }
