@@ -80,15 +80,15 @@ public class TransaccionServiceImpl implements TransaccionService {
                 body.setAmount(new IsoAmount("USD", tx.getMonto()));
 
                 IsoDebtor debtor = new IsoDebtor();
-                debtor.setName("Cliente EcuSol");
+                debtor.setName("Cliente EcuSol"); // Idealmente sacar nombre real de ms-clientes
                 debtor.setAccountId(tx.getCuentaOrigen());
-                debtor.setAccountType("AHORROS");
+                debtor.setAccountType("SAVINGS"); // Standard ISO: SAVINGS or CHECKING
                 body.setDebtor(debtor);
 
                 IsoCreditor creditor = new IsoCreditor();
-                creditor.setName("Beneficiario BO");
+                creditor.setName("Beneficiario Externo");
                 creditor.setAccountId(tx.getCuentaDestino());
-                creditor.setAccountType("AHORROS");
+                creditor.setAccountType("SAVINGS"); // Por defecto mandamos SAVINGS
                 creditor.setTargetBankId(solicitud.getBancoDestinoCodigo());
                 body.setCreditor(creditor);
 
