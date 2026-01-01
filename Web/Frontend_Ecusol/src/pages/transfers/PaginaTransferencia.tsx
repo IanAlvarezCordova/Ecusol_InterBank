@@ -27,7 +27,7 @@ const PaginaTransferencia = () => {
   // Default a TERCERO para que no salgan "mis cuentas" de una
   const [tipoInterno, setTipoInterno] = useState<'PROPIA' | 'TERCERO'>('TERCERO');
 
-  const [banco, setBanco] = useState<string>('NEXUS_BANK'); // Default external
+  const [banco, setBanco] = useState<string>(''); // Default empty to force selection
   const [origen, setOrigen] = useState('');
 
   // Destinos
@@ -158,6 +158,7 @@ const PaginaTransferencia = () => {
       if (tipoInterno === 'TERCERO' && !destinatarioData) { toast.error("Valida la cuenta primero"); return; }
       if (tipoInterno === 'PROPIA' && origen === destinoPropio) { toast.error("Cuentas iguales"); return; }
     } else {
+      if (!banco) { toast.error("Seleccione un banco destino"); return; }
       if (!destinatarioData) { toast.error("Valida la cuenta primero"); return; }
     }
 
@@ -276,6 +277,7 @@ const PaginaTransferencia = () => {
             onChange={(e) => { setBanco(e.target.value); setDestinoManual(''); setDestinatarioData(null); }}
             className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-ecusol-primario focus:ring-2 focus:ring-ecusol-primario outline-none font-bold text-gray-700 bg-white transition-all"
           >
+            <option value="" disabled>Seleccione el Banco Destino</option>
             {BANCOS_TERCEROS.filter(b => b.id !== 'ECUASOL').map(b => (
               <option key={b.id} value={b.id}>
                 {b.nombre}
