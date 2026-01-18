@@ -36,3 +36,16 @@ export interface VentanillaOpDTO {
   monto: number;
   descripcion: string;
 }
+
+export interface MovimientoDTO {
+  id?: string;
+  instructionId?: string;
+  numeroCuenta: string;
+  tipo: "DEPOSITO" | "RETIRO" | "TRANSFERENCIA" | "TRANSACCIONES";
+  monto: number;
+  descripcion: string;
+  fechaCreacion: string;
+  estado: string;
+  cuentaDestino?: string;
+  nombreDestino?: string;
+}

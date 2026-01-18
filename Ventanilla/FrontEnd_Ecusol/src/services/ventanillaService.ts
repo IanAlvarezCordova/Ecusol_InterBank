@@ -1,6 +1,6 @@
 // src/services/ventanillaService.ts
 import { apiClient } from "./apiClient";
-import { AuthResponse, ResumenClienteDTO, VentanillaOpDTO, InfoCuentaDTO } from "../types";
+import { AuthResponse, ResumenClienteDTO, VentanillaOpDTO, InfoCuentaDTO, MovimientoDTO } from "../types";
 
 export const ventanillaService = {
   loginEmpleado: async (usuario: string, clave: string) => {
@@ -57,6 +57,17 @@ export const ventanillaService = {
   eliminarCuenta: async (numeroCuenta: string) => {
     return await apiClient<string>(`/cuenta/${numeroCuenta}`, {
       method: 'DELETE'
+    });
+  },
+
+  obtenerTransacciones: async (numeroCuenta: string) => {
+    return await apiClient<MovimientoDTO[]>(`/transacciones/cuenta/${numeroCuenta}`);
+  },
+
+  procesarDevolucion: async (originalTxId: string) => {
+    return await apiClient<{ message: string }>(`/devoluciones`, {
+      method: 'POST',
+      body: JSON.stringify({ originalTxId })
     });
   }
 };

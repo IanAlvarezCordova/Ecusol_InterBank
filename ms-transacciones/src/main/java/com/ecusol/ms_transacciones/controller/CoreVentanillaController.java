@@ -7,14 +7,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import com.ecusol.ms_transacciones.client.CuentaClient;
+import com.ecusol.ms_transacciones.dto.ReturnRequestDTO;
 import com.ecusol.ms_transacciones.dto.VentanillaDTO.*;
 import com.ecusol.ms_transacciones.model.Transaccion;
 import com.ecusol.ms_transacciones.repository.TransaccionRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Controlador Core para operaciones de Ventanilla.
@@ -166,9 +170,6 @@ public class CoreVentanillaController {
         }
     }
 
-    /**
-     * Realizar operación de caja: DEPOSITO, RETIRO o TRANSFERENCIA
-     */
     @PostMapping("/operar")
     public ResponseEntity<String> operar(@RequestBody TransaccionCajaRequest req) {
         log.info(">>> Core Ventanilla: Operación {} de {} en cuenta {}",
@@ -177,11 +178,9 @@ public class CoreVentanillaController {
         String tipo = req.getTipoOperacion().toUpperCase();
 
         try {
-            // Ejecutar operación sobre cuentas
             switch (tipo) {
                 case "DEPOSITO":
                     cuentaClient.acreditar(req.getCuentaOrigen(), req.getMonto());
-                    // Persistir transacción
                     guardarTransaccionVentanilla(req, "DEPOSITO", null);
                     return ResponseEntity.ok("TXN-DEP-" + System.currentTimeMillis());
 
@@ -194,14 +193,12 @@ public class CoreVentanillaController {
                     if (req.getCuentaDestino() == null || req.getCuentaDestino().isEmpty()) {
                         throw new RuntimeException("Cuenta destino requerida para transferencias");
                     }
-                    // Validar que la cuenta destino exista
                     String urlValidar = cuentasUrl + "/api/v1/cuentas/por-numero/" + req.getCuentaDestino();
                     Map<String, Object> destino = restTemplate.getForObject(urlValidar, Map.class);
                     if (destino == null) {
                         throw new RuntimeException("Cuenta destino no existe");
                     }
 
-                    // Debitar origen y acreditar destino
                     cuentaClient.debitar(req.getCuentaOrigen(), req.getMonto());
                     cuentaClient.acreditar(req.getCuentaDestino(), req.getMonto());
                     guardarTransaccionVentanilla(req, "TRANSFERENCIA", req.getCuentaDestino());
@@ -281,6 +278,35 @@ public class CoreVentanillaController {
         return ResponseEntity.ok("Cuenta eliminada");
     }
 
+ @PostMapping("/devoluciones")
+    public ResponseEntity<?> iniciarDevolucion(@RequestBody Map<String, String> payload) {
+        String originalTxId = payload.get("originalTxId");
+        String motivo = "AC04"; 
+
+        log.info(">>> Iniciando devolución manual para TX: {}", originalTxId);
+
+        Transaccion txLocal = transaccionRepository.findByInstructionId(originalTxId)
+                .orElseThrow(() -> new RuntimeException("Transacción no encontrada"));
+        
+        long horasTranscurridas = ChronoUnit.HOURS.between(txLocal.getFechaEjecucion(), LocalDateTime.now());
+        if (horasTranscurridas > 48) {
+            log.warn(">>> Intento de devolución fuera del plazo. TX ID: {} ({}h transcurridas)", originalTxId, horasTranscurridas);
+            throw new RuntimeException("La transacción excede el plazo de 48 horas para devolución. Horas transcurridas: " + horasTranscurridas);
+        }
+        
+        ReturnRequestDTO req = new ReturnRequestDTO();
+        req.setId(UUID.randomUUID());
+        req.setIdInstruccionOriginal(UUID.fromString(originalTxId));
+        req.setCodigoMotivo(motivo);
+        req.setEstado("RECEIVED");
+
+        cuentaClient.enviarDevolucion(req);
+        
+        txLocal.setEstado("RETURNING"); 
+        transaccionRepository.save(txLocal);
+
+        return ResponseEntity.ok(Map.of("message", "Solicitud de devolución enviada"));
+    }
     // --- HELPERS ---
 
     private String obtenerNombreTipoCuenta(Integer tipoCuentaId) {

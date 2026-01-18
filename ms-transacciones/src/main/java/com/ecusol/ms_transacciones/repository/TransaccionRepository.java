@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import com.ecusol.ms_transacciones.model.Transaccion;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TransaccionRepository extends JpaRepository<Transaccion, Integer> {
@@ -13,4 +14,5 @@ public interface TransaccionRepository extends JpaRepository<Transaccion, Intege
 
     List<Transaccion> findAllByCuentaOrigenOrCuentaDestinoOrderByFechaEjecucionDesc(String cuentaOrigen,
             String cuentaDestino);
+    Optional<Transaccion> findByInstructionId(String instructionId);
 }

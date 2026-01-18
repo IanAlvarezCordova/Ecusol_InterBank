@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import com.ecusol.ms_transacciones.dto.ReturnRequestDTO;
 import com.ecusol.ms_transacciones.exception.SaldoInsuficienteException;
 
 import java.math.BigDecimal;
@@ -16,6 +17,8 @@ public class CuentaClient {
 
     private final RestTemplate restTemplate;
     private final String urlCompleta;
+    @Value("${api.switch.network.url:${api.switch.url}}")
+    private String switchNetworkUrl;
 
     // Eliminamos @RequiredArgsConstructor para usar este constructor manual
     // @Value inyectará la URL desde application.properties o variables de entorno
@@ -58,5 +61,19 @@ public class CuentaClient {
     public void compensar(String cuenta, BigDecimal monto) {
         log.warn("SAGA COMPENSANDO: Revirtiendo débito para cuenta {}", cuenta);
         acreditar(cuenta, monto);
+    }
+
+    public void enviarDevolucion(ReturnRequestDTO request) {
+        String urlDevolucion = switchNetworkUrl.replace("8082", "8085") + "/api/v1/transactions/returns";
+        
+        log.info("Enviando devolución al Switch: Original ID {}", request.getIdInstruccionOriginal());
+
+        try {
+            restTemplate.postForEntity(urlDevolucion, request, Void.class);
+            log.info("Devolución enviada correctamente");
+        } catch (Exception e) {
+            log.error("Error enviando devolución: {}", e.getMessage());
+            throw new RuntimeException("El Switch rechazó la devolución: " + e.getMessage());
+        }
     }
 }
