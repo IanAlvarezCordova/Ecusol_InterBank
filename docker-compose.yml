@@ -75,10 +75,9 @@ services:
       - URL_MS_CLIENTES=http://ecusol-ms-clientes:8084
       - EUREKA_CLIENT_ENABLED=false
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-ecusol:5432/postgres?currentSchema=ecusol_transacciones
-      # Switch DIGICONECU en la Nube (IP real del ecosistema)
-      - APP_SWITCH_URL=https://switch-interbank.ddns.net/api/v1/transacciones
-      - APP_SWITCH_NETWORK_URL=https://switch-interbank.ddns.net/api/v1/transacciones
-      - BANCO_CODIGO=ECUSOL_BK
+      - APP_SWITCH_URL=http://34.16.106.7:8000/api/v2/switch/transfers
+      - APP_SWITCH_NETWORK_URL=http://34.16.106.7:8000
+      - BANCO_CODIGO=ECUSOLBK
     ports: [ "8182:8082" ]
     networks: [ ecusol-net ]
 
