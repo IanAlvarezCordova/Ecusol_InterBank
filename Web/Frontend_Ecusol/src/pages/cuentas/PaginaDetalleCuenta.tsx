@@ -138,62 +138,31 @@ const PaginaDetalleCuenta = () => {
             : tipoTexto;
 
         // --- LOGIC FOR RETURNS ---
-        const handleReturn = async (txId: string) => {
-            if (!confirm('¿Estás seguro de devolver esta transferencia? Se notificará al banco origen.')) return;
-
-            try {
-                // We need current account number. It's in the URL param 'numeroCuenta'
-                // And we invoke the new endpoint
-                const response = await fetch('http://localhost:8082/api/v1/transacciones/devoluciones', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        originalInstructionId: txId,
-                        motivo: 'AC04', // Default reason for user initiated return? Or "Devolucion Cliente"
-                        numeroCuentaPropietaria: mov.cuentaDestino || mov.cuentaOrigen // We need to be careful here. 
-                        // MovimientoDTO might not have explicit 'cuentaPropietaria'. 
-                        // But we are in "PaginaDetalleCuenta", we know 'numeroCuenta' from context/URL.
-                    })
-                });
-
-                // Wait, MovimientoItem does not have access to 'numeroCuenta' from params easily unless passed.
-                // But we can pass it or use context. 
-                // Simplification: We will implement the button logic INSIDE PaginationDetalleCuenta main component or pass handleReturn as prop.
-                // This replacement is inside MovimientoItem component definition which is inside the file.
-                // To make it clean, let's keep MovimientoItem pure and just show the button?
-                // No, let's inject the logic here for speed, assuming we can get the account number.
-            } catch (e) { console.error(e); alert('Error al procesar devolución'); }
-        };
-
-        // To properly implement handleReturn, we need 'numeroCuenta' available in MovimientoItem.
-        // Since MovimientoItem is defined INSIDE PaginaDetalleCuenta scope (in lines 121-166), it HAS access to 'numeroCuenta' from line 59!
-        // Perfect closure access.
-
         const onDevolverClick = async () => {
-            if (!confirm('¿Desea devolver esta transferencia recibida?')) return;
+            if (!window.confirm('¿Desea devolver esta transferencia recibida? Se notificará al banco origen.')) return;
             try {
-                // Access 'bancaService' or fetch directly. Ideally service.
-                // For now direct fetch to demonstrate.
-                // Note: URL hardcoded for demo, validation.
-                const res = await fetch('http://localhost:8082/api/v1/transacciones/devoluciones', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        originalInstructionId: mov.instructionId || mov.referencia, // We need ID
-                        motivo: 'AC04',
-                        numeroCuentaPropietaria: numeroCuenta
-                    })
-                });
-
-                if (res.ok) {
-                    alert('Solicitud enviada');
-                    window.location.reload();
-                } else {
-                    const data = await res.json();
-                    alert('Error: ' + data.message);
+                // Ensure numeroCuenta is available (it comes from useParams context)
+                if (!numeroCuenta) {
+                    alert('Error: No se identificó la cuenta actual.');
+                    return;
                 }
-            } catch (e) {
-                alert('Error de conexión');
+
+                // Call Service
+                // Necesitamos el ID original. Puede venir como instructionId (ISO) o referencia (Interno)
+                const idTx = mov.instructionId || mov.referencia;
+                if (!idTx) {
+                    alert('Error: Transacción sin ID válido para devolución.');
+                    return;
+                }
+
+                await bancaService.solicitarDevolucion(idTx, 'AC04', numeroCuenta);
+
+                alert('Solicitud enviada correctamente');
+                window.location.reload();
+
+            } catch (e: any) {
+                console.error(e);
+                alert('Error al procesar devolución: ' + (e.message || 'Error desconocido'));
             }
         };
 

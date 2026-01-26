@@ -31,7 +31,7 @@ export const bancaService = {
   },
 
   validarDestinatario: async (numeroCuenta: string, banco?: string) => {
-    const url = banco 
+    const url = banco
       ? `/web/validar-destinatario/${numeroCuenta}?banco=${banco}`
       : `/web/validar-destinatario/${numeroCuenta}`;
     return await apiClient<DestinatarioDTO>(url);
@@ -50,20 +50,44 @@ export const bancaService = {
     });
   },
 
-  
+
   getBeneficiarios: async () => {
     return await apiClient<Beneficiario[]>('/web/beneficiarios');
   },
 
   guardarBeneficiario: async (data: Beneficiario) => {
     return await apiClient<string>('/web/beneficiarios', {
-        method: 'POST',
-        body: JSON.stringify(data)
+      method: 'POST',
+      body: JSON.stringify(data)
     });
   },
 
   getSucursales: async () => {
-    
-    return await apiClient<Sucursal[]>('/web/sucursales'); 
+
+    return await apiClient<Sucursal[]>('/web/sucursales');
+  },
+
+  solicitarDevolucion: async (
+    originalInstructionId: string,
+    motivo: string,
+    numeroCuentaPropietaria: string
+  ) => {
+    // Endpoint apunta a TransaccionClienteController POST /api/v1/transacciones/devoluciones
+    // PERO ojo, apiClient suele apuntar a Gateway o microservicio Específico.
+    // Revisado apiClient: apunta a /api/v1 (generalmente) o gestiona prefijos.
+    // En WebBackendController hay endpoints /web/... que proxyan.
+    // Sin embargo, configuramos TransaccionClienteController en ms-transacciones.
+    // El WebBackend debería tener un endpoint espejo o el Gateway rutear directo.
+    // Para no complicar con WebBackend, usaremos la ruta directa del Gateway si es posible /api/v1/transacciones/...
+
+    // Asumiendo que apiClient maneja base URL del gateway:
+    return await apiClient<{ message: string }>('/transacciones/devoluciones', {
+      method: 'POST',
+      body: JSON.stringify({
+        originalInstructionId,
+        motivo,
+        numeroCuentaPropietaria
+      })
+    });
   }
 };
