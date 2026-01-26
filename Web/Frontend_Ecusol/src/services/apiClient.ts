@@ -39,7 +39,7 @@ export const apiClient = async <T>(endpoint: string, options: RequestInit = {}):
       }
 
 
-      const msg = data?.message || data?.error || (typeof data === 'string' ? data : 'Error en el servidor');
+      const msg = data?.message || data?.mensaje || data?.error || (typeof data === 'string' ? data : 'Error en el servidor');
       throw new Error(msg);
     }
 

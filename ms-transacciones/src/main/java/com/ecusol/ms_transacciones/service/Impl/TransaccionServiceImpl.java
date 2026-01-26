@@ -106,9 +106,10 @@ public class TransaccionServiceImpl implements TransaccionService {
                     switchClient.enviarTransferencia(isoMensaje);
                     log.info("✅ Transferencia EXTERNA enviada al Switch exitosamente");
                 } catch (org.springframework.web.client.HttpStatusCodeException e) {
-                    log.error("❌ Error enviando al Switch: Status {} - Body {}", e.getStatusCode(),
-                            e.getResponseBodyAsString());
-                    throw new RuntimeException("Switch rechazó la transacción: " + e.getStatusCode());
+                    String errorBody = e.getResponseBodyAsString();
+                    log.error("❌ Error enviando al Switch: Status {} - Body {}", e.getStatusCode(), errorBody);
+                    // Incluir el body del error en la excepción para que el usuario lo vea
+                    throw new RuntimeException("Switch rechazó: " + errorBody);
                 }
             }
 
