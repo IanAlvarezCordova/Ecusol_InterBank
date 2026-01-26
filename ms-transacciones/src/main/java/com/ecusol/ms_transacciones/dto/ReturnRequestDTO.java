@@ -12,31 +12,55 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class ReturnRequestDTO {
-    
-    @JsonProperty("idInstruccionOriginal")
-    private String idInstruccionOriginal;
-    
-    @JsonProperty("bancoOrigen")
-    private String bancoOrigen;
-    
-    @JsonProperty("bancoDestino")
-    private String bancoDestino;
-    
-    @JsonProperty("cuentaOrigen")
-    private String cuentaOrigen;
-    
-    @JsonProperty("cuentaDestino")
-    private String cuentaDestino;
-    
-    @JsonProperty("monto")
-    private BigDecimal monto;
-    
-    @JsonProperty("razonDevolucion")
-    private String razonDevolucion;
-    
-    @JsonProperty("referencia")
-    private String referencia;
-    
-    @JsonProperty("timestamp")
-    private String timestamp;
+
+    @JsonProperty("header")
+    private Header header;
+
+    @JsonProperty("body")
+    private Body body;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Header {
+        @JsonProperty("messageId")
+        private String messageId;
+
+        @JsonProperty("creationDateTime")
+        private String creationDateTime;
+
+        @JsonProperty("originatingBankId")
+        private String originatingBankId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Body {
+        @JsonProperty("returnInstructionId")
+        private String returnInstructionId;
+
+        @JsonProperty("originalInstructionId")
+        private String originalInstructionId;
+
+        @JsonProperty("returnReason")
+        private String returnReason;
+
+        @JsonProperty("returnAmount")
+        private Amount returnAmount;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Amount {
+        @JsonProperty("currency")
+        private String currency;
+
+        @JsonProperty("value")
+        private BigDecimal value;
+    }
 }

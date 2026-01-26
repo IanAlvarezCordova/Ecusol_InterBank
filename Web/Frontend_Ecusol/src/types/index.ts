@@ -18,13 +18,18 @@ export interface MovimientoDTO {
   saldoNuevo: number;
   descripcion: string;
   operacion?: string; // DEPOSITO | RETIRO | TRANSFERENCIA
+  instructionId?: string;
+  referencia?: string;
+  rolTransaccion?: string; // EMISOR | RECEPTOR
+  cuentaOrigen?: string;
+  cuentaDestino?: string;
 }
 
 export interface DestinatarioDTO {
   numeroCuenta: string;
   nombreTitular: string;
   cedulaParcial: string;
-  tipoCuenta?: string; 
+  tipoCuenta?: string;
 }
 
 export interface TransferenciaRequest {

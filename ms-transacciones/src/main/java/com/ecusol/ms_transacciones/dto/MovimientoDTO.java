@@ -22,4 +22,5 @@ public class MovimientoDTO {
     private String cuentaDestino;
     // Tipo funcional: DEPOSITO, RETIRO, TRANSFERENCIA
     private String tipo;
+    private String instructionId;
 }

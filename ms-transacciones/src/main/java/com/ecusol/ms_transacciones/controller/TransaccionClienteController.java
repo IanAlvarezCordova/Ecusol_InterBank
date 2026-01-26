@@ -42,4 +42,25 @@ public class TransaccionClienteController {
     public ResponseEntity<List<MovimientoDTO>> obtenerMovimientos(@PathVariable String numeroCuenta) {
         return ResponseEntity.ok(service.obtenerMovimientosPorCuenta(numeroCuenta));
     }
+
+    @PostMapping("/devoluciones")
+    @Operation(summary = "Solicitar Devolución de Transferencia Recibida")
+    public ResponseEntity<java.util.Map<String, String>> solicitarDevolucion(
+            @RequestBody java.util.Map<String, String> payload) {
+        String originalId = payload.get("originalInstructionId");
+        String motivo = payload.get("motivo");
+        String numeroCuenta = payload.get("numeroCuentaPropietaria");
+
+        // Simple validation
+        if (originalId == null || numeroCuenta == null) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "Faltan datos requeridos"));
+        }
+
+        try {
+            service.solicitarDevolucion(originalId, motivo, numeroCuenta);
+            return ResponseEntity.ok(java.util.Map.of("message", "Solicitud de devolución enviada correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(java.util.Map.of("message", e.getMessage()));
+        }
+    }
 }

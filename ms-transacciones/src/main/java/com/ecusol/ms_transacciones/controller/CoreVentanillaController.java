@@ -221,7 +221,8 @@ public class CoreVentanillaController {
         tx.setDescripcion(req.getDescripcion() != null ? req.getDescripcion() : ("Ventanilla: " + tipo));
         tx.setEstado("COMPLETED");
         tx.setTipo(tipo);
-        // rolTransaccion: DEPOSITO→CREDITO (crédito en origen), RETIRO→DEBITO (débito en origen), TRANSFERENCIA→DEBITO (débito en origen)
+        // rolTransaccion: DEPOSITO→CREDITO (crédito en origen), RETIRO→DEBITO (débito
+        // en origen), TRANSFERENCIA→DEBITO (débito en origen)
         if ("DEPOSITO".equalsIgnoreCase(tipo)) {
             tx.setRolTransaccion("CREDITO");
         } else if ("RETIRO".equalsIgnoreCase(tipo)) {
@@ -278,37 +279,45 @@ public class CoreVentanillaController {
         return ResponseEntity.ok("Cuenta eliminada");
     }
 
- @PostMapping("/devoluciones")
+    @PostMapping("/devoluciones")
     public ResponseEntity<?> iniciarDevolucion(@RequestBody Map<String, String> payload) {
         String originalTxId = payload.get("originalTxId");
-        String motivo = "AC04"; 
+        String motivo = "AC04";
 
         log.info(">>> Iniciando devolución manual para TX: {}", originalTxId);
 
         Transaccion txLocal = transaccionRepository.findByInstructionId(originalTxId)
                 .orElseThrow(() -> new RuntimeException("Transacción no encontrada"));
-        
+
         long horasTranscurridas = ChronoUnit.HOURS.between(txLocal.getFechaEjecucion(), LocalDateTime.now());
         if (horasTranscurridas > 48) {
-            log.warn(">>> Intento de devolución fuera del plazo. TX ID: {} ({}h transcurridas)", originalTxId, horasTranscurridas);
-            throw new RuntimeException("La transacción excede el plazo de 48 horas para devolución. Horas transcurridas: " + horasTranscurridas);
+            log.warn(">>> Intento de devolución fuera del plazo. TX ID: {} ({}h transcurridas)", originalTxId,
+                    horasTranscurridas);
+            throw new RuntimeException(
+                    "La transacción excede el plazo de 48 horas para devolución. Horas transcurridas: "
+                            + horasTranscurridas);
         }
-        
+
         ReturnRequestDTO req = ReturnRequestDTO.builder()
-            .idInstruccionOriginal(originalTxId)
-            .bancoOrigen("ECUSOLBK") 
-            .bancoDestino(txLocal.getCuentaOrigen())  
-            .cuentaOrigen(txLocal.getCuentaDestino())  
-            .cuentaDestino(txLocal.getCuentaOrigen())  
-            .monto(txLocal.getMonto())
-            .razonDevolucion(motivo)
-            .referencia(UUID.randomUUID().toString())
-            .timestamp(LocalDateTime.now().toString())
-            .build();
+                .header(ReturnRequestDTO.Header.builder()
+                        .messageId("RET-" + UUID.randomUUID())
+                        .creationDateTime(LocalDateTime.now().toString())
+                        .originatingBankId("ECUSOLBK")
+                        .build())
+                .body(ReturnRequestDTO.Body.builder()
+                        .returnInstructionId(UUID.randomUUID().toString())
+                        .originalInstructionId(originalTxId)
+                        .returnReason(motivo)
+                        .returnAmount(ReturnRequestDTO.Amount.builder()
+                                .currency("USD")
+                                .value(txLocal.getMonto())
+                                .build())
+                        .build())
+                .build();
 
         cuentaClient.enviarDevolucion(req);
-        
-        txLocal.setEstado("RETURNING"); 
+
+        txLocal.setEstado("RETURNING");
         transaccionRepository.save(txLocal);
 
         return ResponseEntity.ok(Map.of("message", "Solicitud de devolución enviada"));

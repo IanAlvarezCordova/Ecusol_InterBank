@@ -183,4 +183,62 @@ public class TransaccionServiceImpl implements TransaccionService {
             return dto;
         }).toList();
     }
+
+    @Override
+    @Transactional
+    public void solicitarDevolucion(String originalInstructionId, String motivo, String numeroCuentaPropietaria) {
+        log.info(">>> Solicitud de devolución recibida para TX: {}", originalInstructionId);
+
+        Transaccion txLocal = repository.findByInstructionId(originalInstructionId)
+                .orElseThrow(() -> new RuntimeException("Transacción no encontrada"));
+
+        // Seguridad: Verificar que quien solicita es el dueño de la cuenta destino
+        // (quien recibió la plata)
+        if (!txLocal.getCuentaDestino().equals(numeroCuentaPropietaria)) {
+            // Check si es el origen (caso: solicitud de cancelación por error propio?)
+            // El documento dice: "Flujo 3: Procesamiento de Devoluciones (Returns) ... Si
+            // una transferencia exitosa (COMPLETED) debe ser revertida ... el Banco Destino
+            // debe iniciar un pacs.004."
+            // Por tanto, el dueño de la cuenta destino (Beneficiario) es quien "Devuelve"
+            // (Return).
+            throw new RuntimeException(
+                    "No tiene permiso para devolver esta transacción. Solo el beneficiario puede iniciar el retorno.");
+        }
+
+        // Regla: 48 horas
+        long horasTranscurridas = java.time.temporal.ChronoUnit.HOURS.between(txLocal.getFechaEjecucion(),
+                LocalDateTime.now());
+        if (horasTranscurridas > 48) {
+            log.warn(">>> Intento de devolución fuera del plazo. TX ID: {} ({}h transcurridas)", originalInstructionId,
+                    horasTranscurridas);
+            throw new RuntimeException("La transacción excede el plazo de 48 horas para devolución.");
+        }
+
+        if ("RETURNING".equals(txLocal.getEstado()) || "REVERSED".equals(txLocal.getEstado())) {
+            throw new RuntimeException("La transacción ya está en proceso de devolución o fue reversada.");
+        }
+
+        ReturnRequestDTO req = ReturnRequestDTO.builder()
+                .header(ReturnRequestDTO.Header.builder()
+                        .messageId("RET-" + UUID.randomUUID())
+                        .creationDateTime(LocalDateTime.now().toString())
+                        .originatingBankId("ECUSOLBK")
+                        .build())
+                .body(ReturnRequestDTO.Body.builder()
+                        .returnInstructionId(UUID.randomUUID().toString())
+                        .originalInstructionId(originalInstructionId)
+                        .returnReason(motivo != null ? motivo : "AC04") // Default AC04 or user provided
+                        .returnAmount(ReturnRequestDTO.Amount.builder()
+                                .currency("USD")
+                                .value(txLocal.getMonto())
+                                .build())
+                        .build())
+                .build();
+
+        log.info("Enviando ReturnRequest al Switch...");
+        cuentaClient.enviarDevolucion(req);
+
+        txLocal.setEstado("RETURNING");
+        repository.save(txLocal);
+    }
 }

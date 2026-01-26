@@ -10,4 +10,6 @@ public interface TransaccionService {
     void procesarPagoEntrante(SwitchTransaccionDTO dto);
 
     List<MovimientoDTO> obtenerMovimientosPorCuenta(String numeroCuenta);
+
+    void solicitarDevolucion(String originalInstructionId, String motivo, String numeroCuentaPropietaria);
 }

@@ -47,7 +47,8 @@ public class CuentaClient {
         log.info("Iniciando DÉBITO en: {} para cuenta: {}", url, cuenta);
 
         try {
-            record Req(String cuenta, BigDecimal monto) {}
+            record Req(String cuenta, BigDecimal monto) {
+            }
             restTemplate.postForEntity(url, new Req(cuenta, monto), Void.class);
             log.info("DÉBITO exitoso");
         } catch (HttpClientErrorException.Conflict | HttpClientErrorException.BadRequest e) {
@@ -64,7 +65,8 @@ public class CuentaClient {
         log.info("Iniciando CRÉDITO en: {} para cuenta: {}", url, cuenta);
 
         try {
-            record Req(String cuenta, BigDecimal monto) {}
+            record Req(String cuenta, BigDecimal monto) {
+            }
             restTemplate.postForEntity(url, new Req(cuenta, monto), Void.class);
             log.info("CRÉDITO exitoso");
         } catch (Exception e) {
@@ -81,7 +83,7 @@ public class CuentaClient {
     public void enviarDevolucion(ReturnRequestDTO request) {
         String url = switchReturnsUrl + "/api/v1/transactions/returns";
 
-        log.info("Enviando devolución al Switch: Original ID {}", request.getIdInstruccionOriginal());
+        log.info("Enviando devolución al Switch: Original ID {}", request.getBody().getOriginalInstructionId());
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -99,8 +101,30 @@ public class CuentaClient {
     }
 
     public void enviarDevolucionAsincrona(ReturnRequestDTO request) {
-        log.info("Enviando devolución ASÍNCRONA a RabbitMQ: Original ID {}", request.getIdInstruccionOriginal());
+        log.info("Enviando devolución ASÍNCRONA a RabbitMQ: Original ID {}",
+                request.getBody().getOriginalInstructionId());
         rabbitTemplate.convertAndSend("switch.exchange", "switch.returns.in", request);
+    }
+
+    public String validarCuenta(String numeroCuenta) {
+        try {
+            String url = cuentasUrl() + "/por-numero/" + numeroCuenta;
+            // Usamos Map para no depender del DTO de CBS
+            org.springframework.http.ResponseEntity<java.util.Map> response = restTemplate
+                    .getForEntity(url, java.util.Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return (String) response.getBody().get("estado");
+            }
+        } catch (HttpClientErrorException.NotFound e) {
+            return null; // Cuenta no existe
+        } catch (Exception e) {
+            log.error("Error validando cuenta {}: {}", numeroCuenta, e.getMessage());
+            // Si falla ms-cuentas, asumimos error técnico MS03 (aunque aquí devolvemos null
+            // o lanzamos)
+            throw new RuntimeException("Error técnico validando cuenta: " + e.getMessage());
+        }
+        return null;
     }
 
     public String getSwitchNetworkUrl() {

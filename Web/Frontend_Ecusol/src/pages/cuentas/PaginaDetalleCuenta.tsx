@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Calendar, Download, Filter, Sea
 import { Boton } from '@/components/common/Boton';
 
 interface MovimientoAgrupado {
-    semana: string; 
+    semana: string;
     movimientos: MovimientoDTO[];
 }
 
@@ -16,29 +16,29 @@ const groupByWeek = (movimientos: MovimientoDTO[]): MovimientoAgrupado[] => {
 
     const formatDay = (date: Date) => {
         const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
-        return date.toLocaleDateString('es-ES', options).replace(/\./g, ''); 
+        return date.toLocaleDateString('es-ES', options).replace(/\./g, '');
     };
 
     movimientos.forEach(mov => {
         const date = new Date(mov.fecha);
-        
-        date.setHours(0, 0, 0, 0); 
-        
-        const dayOfWeek = (date.getDay() + 6) % 7; 
+
+        date.setHours(0, 0, 0, 0);
+
+        const dayOfWeek = (date.getDay() + 6) % 7;
         const startOfWeek = new Date(date);
         startOfWeek.setDate(date.getDate() - dayOfWeek);
-        
+
         const weekKey = startOfWeek.toISOString().split('T')[0];
 
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
 
         const groupTitle = `${formatDay(startOfWeek)} - ${formatDay(endOfWeek)}`;
-        
+
         if (!grupos[weekKey]) {
             grupos[weekKey] = [];
         }
-        
+
         if (grupos[weekKey].length === 0) {
             (grupos[weekKey] as any).groupTitle = groupTitle;
         }
@@ -56,224 +56,294 @@ const groupByWeek = (movimientos: MovimientoDTO[]): MovimientoAgrupado[] => {
 
 
 const PaginaDetalleCuenta = () => {
-  const { numeroCuenta } = useParams();
-  const navigate = useNavigate();
-  
-  const [movimientos, setMovimientos] = useState<MovimientoDTO[]>([]);
-  const [movimientosFiltrados, setMovimientosFiltrados] = useState<MovimientoDTO[]>([]);
-  const [gruposSemanales, setGruposSemanales] = useState<MovimientoAgrupado[]>([]); 
-  const [cuentaInfo, setCuentaInfo] = useState<CuentaDTO | null>(null);
-  const [loading, setLoading] = useState(true);
+    const { numeroCuenta } = useParams();
+    const navigate = useNavigate();
 
-  const [filtroTipo, setFiltroTipo] = useState<'TODOS' | 'INGRESOS' | 'EGRESOS'>('TODOS');
-  const [filtroFecha, setFiltroFecha] = useState<'SIEMPRE' | 'SEMANA' | 'MES'>('SIEMPRE');
+    const [movimientos, setMovimientos] = useState<MovimientoDTO[]>([]);
+    const [movimientosFiltrados, setMovimientosFiltrados] = useState<MovimientoDTO[]>([]);
+    const [gruposSemanales, setGruposSemanales] = useState<MovimientoAgrupado[]>([]);
+    const [cuentaInfo, setCuentaInfo] = useState<CuentaDTO | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const cargarDatos = async () => {
-      if (!numeroCuenta) return;
-      try {
-        const movs = await bancaService.getMovimientos(numeroCuenta);
-        setMovimientos(movs);
+    const [filtroTipo, setFiltroTipo] = useState<'TODOS' | 'INGRESOS' | 'EGRESOS'>('TODOS');
+    const [filtroFecha, setFiltroFecha] = useState<'SIEMPRE' | 'SEMANA' | 'MES'>('SIEMPRE');
 
-        setMovimientosFiltrados(movs);
-        setGruposSemanales(groupByWeek(movs)); 
+    useEffect(() => {
+        const cargarDatos = async () => {
+            if (!numeroCuenta) return;
+            try {
+                const movs = await bancaService.getMovimientos(numeroCuenta);
+                setMovimientos(movs);
 
-        const cuentas = await bancaService.getMisCuentas();
-        const actual = cuentas.find(c => c.numeroCuenta === numeroCuenta);
-        if (actual) setCuentaInfo(actual);
+                setMovimientosFiltrados(movs);
+                setGruposSemanales(groupByWeek(movs));
 
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    cargarDatos();
-  }, [numeroCuenta]);
+                const cuentas = await bancaService.getMisCuentas();
+                const actual = cuentas.find(c => c.numeroCuenta === numeroCuenta);
+                if (actual) setCuentaInfo(actual);
 
-
-  useEffect(() => {
-    let resultado = [...movimientos];
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        cargarDatos();
+    }, [numeroCuenta]);
 
 
-    if (filtroTipo === 'INGRESOS') resultado = resultado.filter(m => m.tipo === 'C');
-    if (filtroTipo === 'EGRESOS') resultado = resultado.filter(m => m.tipo === 'D');
+    useEffect(() => {
+        let resultado = [...movimientos];
 
 
-    const ahora = new Date();
-    if (filtroFecha === 'SEMANA') {
-        const haceUnaSemana = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
-        resultado = resultado.filter(m => new Date(m.fecha) >= haceUnaSemana);
-    }
-    if (filtroFecha === 'MES') {
-        const haceUnMes = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
-        resultado = resultado.filter(m => new Date(m.fecha) >= haceUnMes);
-    }
-
-    
-    setMovimientosFiltrados(resultado);
-    setGruposSemanales(groupByWeek(resultado)); 
-
-  }, [filtroTipo, filtroFecha, movimientos]);
+        if (filtroTipo === 'INGRESOS') resultado = resultado.filter(m => m.tipo === 'C');
+        if (filtroTipo === 'EGRESOS') resultado = resultado.filter(m => m.tipo === 'D');
 
 
+        const ahora = new Date();
+        if (filtroFecha === 'SEMANA') {
+            const haceUnaSemana = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
+            resultado = resultado.filter(m => new Date(m.fecha) >= haceUnaSemana);
+        }
+        if (filtroFecha === 'MES') {
+            const haceUnMes = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
+            resultado = resultado.filter(m => new Date(m.fecha) >= haceUnMes);
+        }
 
-const MovimientoItem = ({ mov }: { mov: MovimientoDTO }) => {
-    const esCredito = mov.tipo === 'C';
-    const colorMonto = esCredito ? 'text-green-600' : 'text-red-600';
-    const SignoIcon = esCredito ? ArrowDownLeft : ArrowUpRight;
-    const tipoTexto = esCredito ? 'Ingreso' : 'Egreso';
 
-    const fecha = new Date(mov.fecha);
-    const fechaFormat = fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric' });
-    const horaFormat = fecha.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
+        setMovimientosFiltrados(resultado);
+        setGruposSemanales(groupByWeek(resultado));
 
-    // Etiqueta de operación basada en tipo funcional
-    const operacionLabel = mov.operacion
-        ? mov.operacion === 'DEPOSITO'
-            ? 'Depósito'
-            : mov.operacion === 'RETIRO'
-            ? 'Retiro'
-            : 'Transferencia'
-        : tipoTexto;
+    }, [filtroTipo, filtroFecha, movimientos]);
 
-    return (
-        <div className="flex justify-between items-center p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${esCredito ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                    <SignoIcon size={18} />
-                </div>
-                <div>
-                    <p className="font-medium text-gray-800">{operacionLabel}</p>
-                    <div className="text-xs text-gray-500 flex gap-2 items-center">
-                        <span>{fechaFormat}</span>
-                        <span>{horaFormat}</span>
-                        <span className="text-gray-400">•</span>
-                        <span className="text-gray-600">{mov.descripcion}</span>
+
+
+    const MovimientoItem = ({ mov }: { mov: MovimientoDTO }) => {
+        const esCredito = mov.tipo === 'C';
+        const colorMonto = esCredito ? 'text-green-600' : 'text-red-600';
+        const SignoIcon = esCredito ? ArrowDownLeft : ArrowUpRight;
+        const tipoTexto = esCredito ? 'Ingreso' : 'Egreso';
+
+        const fecha = new Date(mov.fecha);
+        const fechaFormat = fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric' });
+        const horaFormat = fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // Etiqueta de operación basada en tipo funcional
+        const operacionLabel = mov.operacion
+            ? mov.operacion === 'DEPOSITO'
+                ? 'Depósito'
+                : mov.operacion === 'RETIRO'
+                    ? 'Retiro'
+                    : 'Transferencia'
+            : tipoTexto;
+
+        // --- LOGIC FOR RETURNS ---
+        const handleReturn = async (txId: string) => {
+            if (!confirm('¿Estás seguro de devolver esta transferencia? Se notificará al banco origen.')) return;
+
+            try {
+                // We need current account number. It's in the URL param 'numeroCuenta'
+                // And we invoke the new endpoint
+                const response = await fetch('http://localhost:8082/api/v1/transacciones/devoluciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        originalInstructionId: txId,
+                        motivo: 'AC04', // Default reason for user initiated return? Or "Devolucion Cliente"
+                        numeroCuentaPropietaria: mov.cuentaDestino || mov.cuentaOrigen // We need to be careful here. 
+                        // MovimientoDTO might not have explicit 'cuentaPropietaria'. 
+                        // But we are in "PaginaDetalleCuenta", we know 'numeroCuenta' from context/URL.
+                    })
+                });
+
+                // Wait, MovimientoItem does not have access to 'numeroCuenta' from params easily unless passed.
+                // But we can pass it or use context. 
+                // Simplification: We will implement the button logic INSIDE PaginationDetalleCuenta main component or pass handleReturn as prop.
+                // This replacement is inside MovimientoItem component definition which is inside the file.
+                // To make it clean, let's keep MovimientoItem pure and just show the button?
+                // No, let's inject the logic here for speed, assuming we can get the account number.
+            } catch (e) { console.error(e); alert('Error al procesar devolución'); }
+        };
+
+        // To properly implement handleReturn, we need 'numeroCuenta' available in MovimientoItem.
+        // Since MovimientoItem is defined INSIDE PaginaDetalleCuenta scope (in lines 121-166), it HAS access to 'numeroCuenta' from line 59!
+        // Perfect closure access.
+
+        const onDevolverClick = async () => {
+            if (!confirm('¿Desea devolver esta transferencia recibida?')) return;
+            try {
+                // Access 'bancaService' or fetch directly. Ideally service.
+                // For now direct fetch to demonstrate.
+                // Note: URL hardcoded for demo, validation.
+                const res = await fetch('http://localhost:8082/api/v1/transacciones/devoluciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        originalInstructionId: mov.instructionId || mov.referencia, // We need ID
+                        motivo: 'AC04',
+                        numeroCuentaPropietaria: numeroCuenta
+                    })
+                });
+
+                if (res.ok) {
+                    alert('Solicitud enviada');
+                    window.location.reload();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error de conexión');
+            }
+        };
+
+
+        return (
+            <div className="flex justify-between items-center p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full ${esCredito ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                        <SignoIcon size={18} />
+                    </div>
+                    <div>
+                        <p className="font-medium text-gray-800">{operacionLabel}</p>
+                        <div className="text-xs text-gray-500 flex gap-2 items-center">
+                            <span>{fechaFormat}</span>
+                            <span>{horaFormat}</span>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-gray-600">{mov.descripcion}</span>
+                        </div>
                     </div>
                 </div>
+                <div className="text-right flex flex-col items-end">
+                    <p className={`font-bold ${colorMonto}`}>
+                        {esCredito ? '+' : '-'}{formatCurrency(mov.monto)}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                        Saldo: {formatCurrency(mov.saldoNuevo)}
+                    </p>
+
+                    {esCredito && mov.rolTransaccion === 'RECEPTOR' && (
+                        <button
+                            onClick={onDevolverClick}
+                            className="mt-1 text-xs text-red-500 hover:text-red-700 underline cursor-pointer"
+                        >
+                            Devolver
+                        </button>
+                    )}
+                </div>
             </div>
-            <div className="text-right">
-                <p className={`font-bold ${colorMonto}`}>
-                    {esCredito ? '+' : '-'}{formatCurrency(mov.monto)}
-                </p>
-                <p className="text-xs text-gray-400">
-                    Saldo: {formatCurrency(mov.saldoNuevo)}
-                </p>
+        );
+    };
+
+
+    if (loading) return <div className="p-10 text-center text-ecusol-primario font-bold">Cargando movimientos...</div>;
+
+    const totalMovimientos = movimientosFiltrados.length;
+
+
+    return (
+        <div className="max-w-5xl mx-auto space-y-6 pb-12">
+
+            <div className="flex items-center gap-4">
+                <button onClick={() => navigate('/app/cuentas')} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                    <ArrowLeft className="text-ecusol-primario" />
+                </button>
+                <div>
+                    <h1 className="text-2xl font-bold text-ecusol-primario">Detalle de Movimientos</h1>
+                    <p className="text-gray-500 text-sm">Cuenta Nro: <span className="font-mono font-bold text-gray-700">{numeroCuenta}</span></p>
+                </div>
             </div>
+
+
+            {cuentaInfo && (
+                <div className={`p-8 rounded-2xl shadow-lg flex justify-between items-center text-white relative overflow-hidden
+            ${cuentaInfo.tipoCuentaId === 1
+                        ? 'bg-gradient-to-r from-ecusol-primario to-blue-900' // Azul para Ahorros
+                        : 'bg-gradient-to-r from-gray-800 to-black'} // Negro para Corriente
+        `}>
+                    <div className="relative z-10">
+                        <p className="text-white/80 text-sm font-medium mb-1 uppercase tracking-wider">
+                            {cuentaInfo.tipoCuentaId === 1 ? 'Cuenta de Ahorros' : 'Cuenta Corriente'}
+                        </p>
+                        <p className="text-4xl font-bold tracking-tight">{formatCurrency(cuentaInfo.saldo)}</p>
+                        <p className="text-xs text-white/60 mt-2">Saldo Disponible</p>
+                    </div>
+                    <div className="text-right hidden sm:block relative z-10">
+                        <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-bold backdrop-blur-sm border border-white/30">
+                            {cuentaInfo.estado}
+                        </span>
+                    </div>
+
+                    <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none">
+                        <svg width="200" height="200" viewBox="0 0 200 200" fill="white"><circle cx="150" cy="150" r="100" /></svg>
+                    </div>
+                </div>
+            )}
+
+
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+                    <Filter size={18} className="text-gray-400 mr-2" />
+
+                    <select
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ecusol-primario outline-none"
+                        value={filtroTipo}
+                        onChange={(e) => setFiltroTipo(e.target.value as any)}
+                    >
+                        <option value="TODOS">Todos los tipos</option>
+                        <option value="INGRESOS">Solo Ingresos</option>
+                        <option value="EGRESOS">Solo Egresos</option>
+                    </select>
+
+                    <select
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ecusol-primario outline-none"
+                        value={filtroFecha}
+                        onChange={(e) => setFiltroFecha(e.target.value as any)}
+                    >
+                        <option value="SIEMPRE">Todo el historial</option>
+                        <option value="SEMANA">Últimos 7 días</option>
+                        <option value="MES">Este mes</option>
+                    </select>
+                </div>
+
+                <Boton variante="secundario" tamano="pequeno" icono={<Download size={16} />}>
+                    Exportar Excel
+                </Boton>
+            </div>
+
+
+            <h2 className="text-xl font-bold text-gray-700 mt-6">Historial ({totalMovimientos} movimientos)</h2>
+
+            {totalMovimientos === 0 ? (
+                <div className="p-16 text-center flex flex-col items-center text-gray-400 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <Search size={48} className="mb-4 opacity-20" />
+                    <p>No se encontraron movimientos con estos filtros.</p>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {gruposSemanales.map((grupo, index) => (
+                        <div key={index} className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+
+                            <div className="bg-gray-50 p-3 px-6 border-b border-gray-100 flex justify-between items-center">
+                                <span className="text-xs font-bold uppercase text-gray-500 flex items-center gap-2">
+                                    <Calendar size={14} className='text-ecusol-secundario' /> {grupo.semana}
+                                </span>
+                                <span className='text-xs text-gray-400'>{grupo.movimientos.length} transacciones</span>
+                            </div>
+
+
+                            <div>
+                                {grupo.movimientos.map((mov, movIndex) => (
+                                    <MovimientoItem key={movIndex} mov={mov} />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
         </div>
     );
-};
-
-
-  if (loading) return <div className="p-10 text-center text-ecusol-primario font-bold">Cargando movimientos...</div>;
-  
-  const totalMovimientos = movimientosFiltrados.length;
-
-
-  return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
-
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/app/cuentas')} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-          <ArrowLeft className="text-ecusol-primario" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-ecusol-primario">Detalle de Movimientos</h1>
-          <p className="text-gray-500 text-sm">Cuenta Nro: <span className="font-mono font-bold text-gray-700">{numeroCuenta}</span></p>
-        </div>
-      </div>
-
-
-      {cuentaInfo && (
-        <div className={`p-8 rounded-2xl shadow-lg flex justify-between items-center text-white relative overflow-hidden
-            ${cuentaInfo.tipoCuentaId === 1 
-                ? 'bg-gradient-to-r from-ecusol-primario to-blue-900' // Azul para Ahorros
-                : 'bg-gradient-to-r from-gray-800 to-black'} // Negro para Corriente
-        `}>
-          <div className="relative z-10">
-            <p className="text-white/80 text-sm font-medium mb-1 uppercase tracking-wider">
-                {cuentaInfo.tipoCuentaId === 1 ? 'Cuenta de Ahorros' : 'Cuenta Corriente'}
-            </p>
-            <p className="text-4xl font-bold tracking-tight">{formatCurrency(cuentaInfo.saldo)}</p>
-            <p className="text-xs text-white/60 mt-2">Saldo Disponible</p>
-          </div>
-          <div className="text-right hidden sm:block relative z-10">
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-bold backdrop-blur-sm border border-white/30">
-              {cuentaInfo.estado}
-            </span>
-          </div>
-
-          <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none">
-             <svg width="200" height="200" viewBox="0 0 200 200" fill="white"><circle cx="150" cy="150" r="100" /></svg>
-          </div>
-        </div>
-      )}
-
-
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-            <Filter size={18} className="text-gray-400 mr-2" />
-            
-            <select 
-                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ecusol-primario outline-none"
-                value={filtroTipo}
-                onChange={(e) => setFiltroTipo(e.target.value as any)}
-            >
-                <option value="TODOS">Todos los tipos</option>
-                <option value="INGRESOS">Solo Ingresos</option>
-                <option value="EGRESOS">Solo Egresos</option>
-            </select>
-
-            <select 
-                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ecusol-primario outline-none"
-                value={filtroFecha}
-                onChange={(e) => setFiltroFecha(e.target.value as any)}
-            >
-                <option value="SIEMPRE">Todo el historial</option>
-                <option value="SEMANA">Últimos 7 días</option>
-                <option value="MES">Este mes</option>
-            </select>
-         </div>
-         
-         <Boton variante="secundario" tamano="pequeno" icono={<Download size={16}/>}>
-            Exportar Excel
-         </Boton>
-      </div>
-
-
-      <h2 className="text-xl font-bold text-gray-700 mt-6">Historial ({totalMovimientos} movimientos)</h2>
-
-      {totalMovimientos === 0 ? (
-         <div className="p-16 text-center flex flex-col items-center text-gray-400 bg-white rounded-2xl shadow-sm border border-gray-200">
-            <Search size={48} className="mb-4 opacity-20"/>
-            <p>No se encontraron movimientos con estos filtros.</p>
-         </div>
-      ) : (
-        <div className="space-y-6">
-          {gruposSemanales.map((grupo, index) => (
-            <div key={index} className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-
-                <div className="bg-gray-50 p-3 px-6 border-b border-gray-100 flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase text-gray-500 flex items-center gap-2">
-                        <Calendar size={14} className='text-ecusol-secundario'/> {grupo.semana}
-                    </span>
-                    <span className='text-xs text-gray-400'>{grupo.movimientos.length} transacciones</span>
-                </div>
-                
-
-                <div>
-                    {grupo.movimientos.map((mov, movIndex) => (
-                        <MovimientoItem key={movIndex} mov={mov} />
-                    ))}
-                </div>
-            </div>
-          ))}
-        </div>
-      )}
-        
-    </div>
-  );
 };
 
 export default PaginaDetalleCuenta;
