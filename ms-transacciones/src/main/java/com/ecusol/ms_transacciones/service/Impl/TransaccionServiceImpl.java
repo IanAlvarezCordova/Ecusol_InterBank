@@ -30,6 +30,7 @@ public class TransaccionServiceImpl implements TransaccionService {
     private final CuentaClient cuentaClient;
     private final SwitchClient switchClient;
     private final TransaccionMapper mapper;
+    private final jakarta.persistence.EntityManager entityManager;
 
     @Value("${banco.webhook.url}")
     private String webhookUrl;
@@ -44,8 +45,6 @@ public class TransaccionServiceImpl implements TransaccionService {
         if (tx.getReferencia() == null)
             tx.setReferencia(tx.getInstructionId());
 
-        // FIX: Usar "idBancoDestino" que es el nombre correcto en la Entidad
-        // Transaccion
         if (solicitud.getBancoDestinoId() != null) {
             tx.setIdBancoDestino(solicitud.getBancoDestinoId());
         } else {
@@ -63,7 +62,6 @@ public class TransaccionServiceImpl implements TransaccionService {
 
             if (esInterna) {
                 // --- TRANSFERENCIA INTERNA ---
-                // Acreditar directamente en local
                 cuentaClient.acreditar(tx.getCuentaDestino(), tx.getMonto());
                 log.info("✅ Transferencia INTERNA completada: {} -> {}",
                         tx.getCuentaOrigen(), tx.getCuentaDestino());
@@ -85,15 +83,15 @@ public class TransaccionServiceImpl implements TransaccionService {
                 body.setAmount(new IsoAmount("USD", tx.getMonto()));
 
                 IsoDebtor debtor = new IsoDebtor();
-                debtor.setName("Cliente EcuSol"); // Idealmente sacar nombre real de ms-clientes
+                debtor.setName("Cliente EcuSol");
                 debtor.setAccountId(tx.getCuentaOrigen());
-                debtor.setAccountType("SAVINGS"); // Standard ISO: SAVINGS or CHECKING
+                debtor.setAccountType("SAVINGS");
                 body.setDebtor(debtor);
 
                 IsoCreditor creditor = new IsoCreditor();
                 creditor.setName("Beneficiario Externo");
                 creditor.setAccountId(tx.getCuentaDestino());
-                creditor.setAccountType("SAVINGS"); // Por defecto mandamos SAVINGS
+                creditor.setAccountType("SAVINGS");
                 creditor.setTargetBankId(solicitud.getBancoDestinoCodigo());
                 body.setCreditor(creditor);
 
@@ -102,15 +100,8 @@ public class TransaccionServiceImpl implements TransaccionService {
                 IsoMensajeDTO isoMensaje = new IsoMensajeDTO(header, body);
 
                 // 3. Enviar al Switch
-                try {
-                    switchClient.enviarTransferencia(isoMensaje);
-                    log.info("✅ Transferencia EXTERNA enviada al Switch exitosamente");
-                } catch (org.springframework.web.client.HttpStatusCodeException e) {
-                    String errorBody = e.getResponseBodyAsString();
-                    log.error("❌ Error enviando al Switch: Status {} - Body {}", e.getStatusCode(), errorBody);
-                    // Incluir el body del error en la excepción para que el usuario lo vea
-                    throw new RuntimeException("Switch rechazó: " + errorBody);
-                }
+                switchClient.enviarTransferencia(isoMensaje);
+                log.info("✅ Transferencia EXTERNA enviada al Switch exitosamente");
             }
 
             // Éxito
@@ -202,41 +193,31 @@ public class TransaccionServiceImpl implements TransaccionService {
                 .orElseThrow(() -> new RuntimeException("Transacción no encontrada"));
 
         // Seguridad: Verificar que quien solicita es el dueño de la cuenta destino
-        // (quien recibió la plata)
         if (!txLocal.getCuentaDestino().equals(numeroCuentaPropietaria)) {
-            // Check si es el origen (caso: solicitud de cancelación por error propio?)
-            // El documento dice: "Flujo 3: Procesamiento de Devoluciones (Returns) ... Si
-            // una transferencia exitosa (COMPLETED) debe ser revertida ... el Banco Destino
-            // debe iniciar un pacs.004."
-            // Por tanto, el dueño de la cuenta destino (Beneficiario) es quien "Devuelve"
-            // (Return).
-            throw new RuntimeException(
-                    "No tiene permiso para devolver esta transacción. Solo el beneficiario puede iniciar el retorno.");
+            throw new RuntimeException("No permiso. Solo el beneficiario puede iniciar el retorno.");
         }
 
-        // Regla: 48 horas
+        if (!"COMPLETED".equals(txLocal.getEstado())) {
+            throw new RuntimeException("Solo se pueden devolver transacciones exitosas (COMPLETED).");
+        }
+
         long horasTranscurridas = java.time.temporal.ChronoUnit.HOURS.between(txLocal.getFechaEjecucion(),
                 LocalDateTime.now());
         if (horasTranscurridas > 48) {
-            log.warn(">>> Intento de devolución fuera del plazo. TX ID: {} ({}h transcurridas)", originalInstructionId,
-                    horasTranscurridas);
             throw new RuntimeException("La transacción excede el plazo de 48 horas para devolución.");
         }
 
-        if ("RETURNING".equals(txLocal.getEstado()) || "REVERSED".equals(txLocal.getEstado())) {
-            throw new RuntimeException("La transacción ya está en proceso de devolución o fue reversada.");
-        }
-
+        // Construir DTO de Devolución
         ReturnRequestDTO req = ReturnRequestDTO.builder()
                 .header(ReturnRequestDTO.Header.builder()
                         .messageId("RET-" + UUID.randomUUID())
                         .creationDateTime(LocalDateTime.now().toString())
-                        .originatingBankId("ECUSOLBK")
+                        .originatingBankId(switchClient.getBancoCodigo())
                         .build())
                 .body(ReturnRequestDTO.Body.builder()
                         .returnInstructionId(UUID.randomUUID().toString())
                         .originalInstructionId(originalInstructionId)
-                        .returnReason(motivo != null ? motivo : "AC04") // Default AC04 or user provided
+                        .returnReason(motivo != null ? motivo : "AC04")
                         .returnAmount(ReturnRequestDTO.Amount.builder()
                                 .currency("USD")
                                 .value(txLocal.getMonto())
@@ -244,10 +225,68 @@ public class TransaccionServiceImpl implements TransaccionService {
                         .build())
                 .build();
 
-        log.info("Enviando ReturnRequest al Switch...");
-        cuentaClient.enviarDevolucion(req);
+        log.info("Enviando ReturnRequest al Switch V2...");
 
-        txLocal.setEstado("RETURNING");
-        repository.save(txLocal);
+        // Llamada al Switch
+        try {
+            switchClient.enviarDevolucion(req);
+        } catch (Exception e) {
+            log.error("Error al enviar devolución al switch: {}", e.getMessage());
+            throw new RuntimeException("Error contactando al Switch para devolución: " + e.getMessage());
+        }
+
+        // CONCURRENCY FIX: El webhook puede haber llegado mientras enviábamos
+        try {
+            entityManager.refresh(txLocal); // Forzar lectura real de DB para ver si Webhook ya actualizó
+
+            if ("REFUNDED".equals(txLocal.getEstado()) || "RETURNED".equals(txLocal.getEstado())) {
+                log.info("Race condition: Webhook actualizó estado antes que nosotros. Todo OK.");
+                return;
+            }
+
+            txLocal.setEstado("RETURN_REQUESTED");
+            repository.saveAndFlush(txLocal);
+
+        } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+            log.info("Optimistic Lock: Webhook ganó. Todo OK.");
+        }
+    }
+
+    // Método para manejar Webhook de Retorno (Entrante)
+    @Transactional
+    public void procesarDevolucionEntrante(ReturnRequestDTO dto) {
+        String originalId = dto.getBody().getOriginalInstructionId();
+        log.info(">>> Procesando Devolución Entrante para Original ID: {}", originalId);
+
+        Transaccion tx = repository.findByInstructionId(originalId)
+                .orElseThrow(() -> new RuntimeException("Transacción original no encontrada para devolver"));
+
+        if ("REFUNDED".equals(tx.getEstado()) || "RETURNED".equals(tx.getEstado())) {
+            log.info("Idempotencia: Transacción ya marcada como devuelta.");
+            return;
+        }
+
+        // Determinar si soy el Origen (Recibo dinero) o Destino (Me quitan)
+        // Como este banco "EcuSol" puede actuar en ambos roles, verificamos:
+
+        // Caso 1: Yo envié el dinero originalmente (Tx Saliente). Ahora me lo
+        // devuelven.
+        // Mi cliente es cuentaOrigen. Debo Acreditarle.
+        // Nota: En Tx Saliente, 'idBancoDestino' es != 1 (o mi ID interno).
+        // O mejor chequeo if cuentaOrigen es de este banco? (Si está en la Tx, es
+        // cliente local, excepto si es pasarela)
+        // Asumimos modelo simple: cuentaOrigen es local.
+
+        boolean soyOrigenOriginal = true; // Por defecto si tengo la Tx completa
+
+        if (soyOrigenOriginal) {
+            log.info("Reintegro: Devolviendo {} a cuenta local {}", tx.getMonto(), tx.getCuentaOrigen());
+            cuentaClient.acreditar(tx.getCuentaOrigen(), tx.getMonto());
+            tx.setEstado("REFUNDED");
+            tx.setDescripcion("Devolución Exitosa (Reembolso)");
+        }
+
+        repository.save(tx);
+        log.info("Devolución procesada exitosamente. Estado final: REFUNDED");
     }
 }

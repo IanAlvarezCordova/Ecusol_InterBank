@@ -103,6 +103,19 @@ public class CoreBancarioClient {
         }
     }
 
+    public void solicitarDevolucion(String idTx, String motivo, String numeroCuenta) {
+        var payload = java.util.Map.of(
+                "originalInstructionId", idTx,
+                "motivo", motivo,
+                "numeroCuentaPropietaria", numeroCuenta);
+        webClient.post()
+                .uri("/v1/transacciones/devoluciones")
+                .bodyValue(payload)
+                .retrieve()
+                .toBodilessEntity()
+                .block();
+    }
+
     // --- ORQUESTACIÓN VALIDACIÓN ---
     public TitularCuentaDTO validarTitular(String numeroCuenta) {
         CuentaCoreDTO cuenta = buscarCuenta(numeroCuenta);

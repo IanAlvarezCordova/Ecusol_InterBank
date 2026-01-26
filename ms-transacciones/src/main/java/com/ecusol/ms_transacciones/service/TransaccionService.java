@@ -12,4 +12,6 @@ public interface TransaccionService {
     List<MovimientoDTO> obtenerMovimientosPorCuenta(String numeroCuenta);
 
     void solicitarDevolucion(String originalInstructionId, String motivo, String numeroCuentaPropietaria);
+
+    void procesarDevolucionEntrante(ReturnRequestDTO dto);
 }

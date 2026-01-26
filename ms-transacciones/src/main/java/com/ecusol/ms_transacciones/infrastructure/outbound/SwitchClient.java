@@ -28,18 +28,57 @@ public class SwitchClient {
     }
 
     public void enviarTransferencia(IsoMensajeDTO request) {
-        System.out.println(
-                ">>> ENVIANDO AL SWITCH [" + switchUrl + "] APIKEY_LEN=" + (apiKey != null ? apiKey.length() : "NULL"));
+        System.out.println(">>> ENVIANDO AL SWITCH V2 [" + switchUrl + "] APIKEY_LEN="
+                + (apiKey != null ? apiKey.length() : "NULL"));
 
-        String response = restClient.post()
-                .uri(switchUrl)
-                .header("apikey", apiKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .retrieve()
-                .body(String.class);
+        try {
+            String url = switchUrl + "/api/v2/switch/transfers";
+            if (switchUrl.endsWith("/"))
+                url = switchUrl + "api/v2/switch/transfers";
 
-        System.out.println(">>> RESPUESTA SWITCH: " + response);
+            String response = restClient.post()
+                    .uri(url)
+                    .header("apikey", apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .body(String.class);
+
+            System.out.println(">>> RESPUESTA SWITCH: " + response);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            System.err.println(">>> ERROR SWITCH 4xx: " + e.getResponseBodyAsString());
+            throw new RuntimeException(e.getResponseBodyAsString()); // Propagar mensaje JSON del switch
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            System.err.println(">>> ERROR SWITCH 5xx: " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error técnico en el Switch (5xx)");
+        } catch (Exception e) {
+            throw new RuntimeException("Error de conexión con el Switch: " + e.getMessage());
+        }
+    }
+
+    public void enviarDevolucion(com.ecusol.ms_transacciones.dto.ReturnRequestDTO request) {
+        System.out.println(">>> ENVIANDO DEVOLUCION V2 [" + switchUrl + "]");
+        try {
+            String url = switchUrl + "/api/v2/switch/transfers/return";
+            if (switchUrl.endsWith("/"))
+                url = switchUrl + "api/v2/switch/transfers/return";
+
+            String response = restClient.post()
+                    .uri(url)
+                    .header("apikey", apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .body(String.class);
+
+            System.out.println(">>> RESPUESTA RETURN SWITCH: " + response);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            System.err.println(">>> ERROR SWITCH RETURN 4xx: " + e.getResponseBodyAsString());
+            throw new RuntimeException(e.getResponseBodyAsString());
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            System.err.println(">>> ERROR SWITCH RETURN 5xx: " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error técnico en Switch (5xx) al devolver");
+        }
     }
 
     public List<BancoDTO> obtenerBancos() {

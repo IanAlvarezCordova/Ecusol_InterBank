@@ -81,12 +81,13 @@ export const bancaService = {
     // Para no complicar con WebBackend, usaremos la ruta directa del Gateway si es posible /api/v1/transacciones/...
 
     // Asumiendo que apiClient maneja base URL del gateway:
-    return await apiClient<{ message: string }>('/transacciones/devoluciones', {
+    // Endpoint apunta a BFF (BancaWebController)
+    return await apiClient<{ message: string }>('/web/transacciones/devolucion', {
       method: 'POST',
       body: JSON.stringify({
-        originalInstructionId,
+        idTransaccion: originalInstructionId, // BFF expects idTransaccion
         motivo,
-        numeroCuentaPropietaria
+        numeroCuenta: numeroCuentaPropietaria // BFF expects numeroCuenta
       })
     });
   }

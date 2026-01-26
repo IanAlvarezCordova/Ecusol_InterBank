@@ -18,6 +18,7 @@ public class WebhookController {
 
     private final RabbitTemplate rabbitTemplate;
     private final com.ecusol.ms_transacciones.client.CuentaClient cuentaClient;
+    private final com.ecusol.ms_transacciones.service.TransaccionService transaccionService;
 
     @PostMapping("/webhook")
     public ResponseEntity<Map<String, Object>> recibirTransferencia(@RequestBody IsoMensajeDTO mensaje) {
@@ -97,6 +98,32 @@ public class WebhookController {
 
             // Retornar 500 para que Switch reintente
             return ResponseEntity.status(500).body(respuesta);
+        }
+    }
+
+    // --- NUEVO ENDPOINT PARA DEVOLUCIONES (RETURNS) ---
+    // Mapeamos ambas rutas posibles (estándar y con sufijo que agrega el switch)
+    @PostMapping({ "/webhook/return", "/webhook/api/incoming/return" })
+    public ResponseEntity<Map<String, Object>> recibirDevolucion(
+            @RequestBody com.ecusol.ms_transacciones.dto.ReturnRequestDTO dto) {
+        log.info("📥 Webhook: Recibida solicitud de DEVOLUCIÓN (Return)");
+        log.info("   ├─ Original Instruction ID: {}", dto.getBody().getOriginalInstructionId());
+        log.info("   ├─ Return Reason: {}", dto.getBody().getReturnReason());
+
+        try {
+            // Procesar Síncronamente (Actualizar estado y acreditar)
+            transaccionService.procesarDevolucionEntrante(dto);
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "PROCESSED",
+                    "originalInstructionId", dto.getBody().getOriginalInstructionId(),
+                    "message", "Devolución procesada correctamente"));
+
+        } catch (Exception e) {
+            log.error("Error procesando devolución entrante: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of(
+                    "status", "ERROR",
+                    "message", e.getMessage()));
         }
     }
 

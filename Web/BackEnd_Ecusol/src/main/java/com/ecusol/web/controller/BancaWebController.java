@@ -92,4 +92,15 @@ public class BancaWebController {
     public List<BeneficiarioDTO> listarBeneficiarios(@RequestHeader("Authorization") String token) {
         return bankingService.misBeneficiarios(getUsuarioWebId(token));
     }
+
+    @PostMapping("/transacciones/devolucion")
+    public ResponseEntity<String> solicitarDevolucion(@RequestHeader("Authorization") String token,
+            @RequestBody java.util.Map<String, String> body) {
+        String idTx = body.get("idTransaccion");
+        String motivo = body.get("motivo");
+        String numeroCuenta = body.get("numeroCuenta");
+
+        bankingService.solicitarDevolucion(idTx, motivo, numeroCuenta);
+        return ResponseEntity.ok("Solicitud de devolución enviada");
+    }
 }

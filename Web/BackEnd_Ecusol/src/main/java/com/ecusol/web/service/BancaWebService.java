@@ -213,4 +213,8 @@ public class BancaWebService {
                         b.getTipoCuenta()))
                 .collect(Collectors.toList());
     }
+
+    public void solicitarDevolucion(String idTx, String motivo, String numeroCuenta) {
+        coreClient.solicitarDevolucion(idTx, motivo, numeroCuenta);
+    }
 }
