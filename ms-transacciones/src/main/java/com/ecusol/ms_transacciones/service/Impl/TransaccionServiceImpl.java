@@ -91,7 +91,7 @@ public class TransaccionServiceImpl implements TransaccionService {
                 creditor.setName("Beneficiario Externo");
                 creditor.setAccountId(tx.getCuentaDestino());
                 creditor.setAccountType("CACC");
-                creditor.setTargetBankId(solicitud.getBancoDestinoCodigo());
+                creditor.setTargetBankId("NEXUS_BK");
                 body.setCreditor(creditor);
 
                 body.setRemittanceInformation(tx.getDescripcion());
