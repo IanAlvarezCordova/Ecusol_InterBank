@@ -72,7 +72,7 @@ public class TransaccionServiceImpl implements TransaccionService {
                 // 1. Preparar Header
                 IsoHeader header = new IsoHeader(
                         tx.getInstructionId(),
-                        LocalDateTime.now().toString(),
+                        LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString(),
                         switchClient.getBancoCodigo());
 
                 // 2. Preparar Body
