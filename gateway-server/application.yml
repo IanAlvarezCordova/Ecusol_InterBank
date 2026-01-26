@@ -27,7 +27,7 @@ spring:
         - id: ecusol-ms-transacciones
           uri: http://ecusol-ms-transacciones:8082
           predicates:
-            - Path=/api/v1/transacciones/**, /api/v1/switch/**
+            - Path=/api/v1/transacciones/**, /api/transacciones/**, /api/core/ventanilla/**, /api/v1/switch/**
 
         - id: ecusol-ms-cuentas
           uri: http://ecusol-ms-cuentas:8083

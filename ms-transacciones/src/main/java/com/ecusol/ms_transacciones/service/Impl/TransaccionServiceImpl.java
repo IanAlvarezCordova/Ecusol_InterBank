@@ -2,6 +2,7 @@ package com.ecusol.ms_transacciones.service.Impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,9 @@ public class TransaccionServiceImpl implements TransaccionService {
     private final CuentaClient cuentaClient;
     private final SwitchClient switchClient;
     private final TransaccionMapper mapper;
+
+    @Value("${banco.webhook.url}")
+    private String webhookUrl;
 
     @Override
     @Transactional
@@ -71,7 +75,8 @@ public class TransaccionServiceImpl implements TransaccionService {
                 IsoHeader header = new IsoHeader(
                         tx.getInstructionId(),
                         LocalDateTime.now().toString(),
-                        switchClient.getBancoCodigo());
+                        switchClient.getBancoCodigo(),
+                        webhookUrl);
 
                 // 2. Preparar Body
                 IsoBody body = new IsoBody();

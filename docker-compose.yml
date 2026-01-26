@@ -19,6 +19,22 @@ services:
     ports: [ "27019:27017" ]
     networks: [ ecusol-net ]
 
+  rabbitmq-server:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-server
+    ports:
+      - "5672:5672"   
+      - "15672:15672" 
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks: [ ecusol-net ]
   # --- GATEWAY (Puerto 9180) ---
   ecusol-gateway:
     build: ./gateway-server
@@ -37,6 +53,25 @@ services:
       # No inyectamos SPRING_CLOUD_GATEWAY_ROUTES por ENV para evitar conflictos.
     networks: [ ecusol-net ]
 
+  npm:
+      image: 'jc21/nginx-proxy-manager:latest'
+      container_name: ecusol-npm
+      restart: always
+      ports:
+        - '8090:80'   
+        - '4443:443'  
+        - '81:81'     
+      environment:
+        DISABLE_IPV6: 'true'
+      volumes:
+        - ./npm_data:/data
+        - ./npm_letsencrypt:/etc/letsencrypt
+      depends_on:
+        - front-web
+        - front-ventanilla
+        - nexus-gateway
+      networks:
+        - ecusol-net
   # --- CORE BANCARIO ---
   ecusol-ms-cuentas:
     build: ./cbs
@@ -67,6 +102,11 @@ services:
   ecusol-ms-transacciones:
     build: ./ms-transacciones
     container_name: ecusol-ms-transacciones
+    depends_on:
+      rabbitmq-server:
+        condition: service_healthy
+      postgres-db-ecusol:
+        condition: service_started
     environment:
       - DB_HOST=postgres-db-ecusol
       - DB_PASSWORD=admin
@@ -78,6 +118,12 @@ services:
       - APP_SWITCH_URL=http://34.16.106.7:8000/api/v2/switch/transfers
       - APP_SWITCH_NETWORK_URL=http://34.16.106.7:8000
       - BANCO_CODIGO=ECUSOLBK
+      - SPRING_RABBITMQ_HOST=rabbitmq-server
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - BANCO_COLA_ENTRADA=queue-banco-ecusol
+      - WEBHOOK_URL=http://ecusol-ms-transacciones:8082/api/transacciones/callback
     ports: [ "8182:8082" ]
     networks: [ ecusol-net ]
 

@@ -294,11 +294,17 @@ public class CoreVentanillaController {
             throw new RuntimeException("La transacción excede el plazo de 48 horas para devolución. Horas transcurridas: " + horasTranscurridas);
         }
         
-        ReturnRequestDTO req = new ReturnRequestDTO();
-        req.setId(UUID.randomUUID());
-        req.setIdInstruccionOriginal(UUID.fromString(originalTxId));
-        req.setCodigoMotivo(motivo);
-        req.setEstado("RECEIVED");
+        ReturnRequestDTO req = ReturnRequestDTO.builder()
+            .idInstruccionOriginal(originalTxId)
+            .bancoOrigen("ECUSOLBK") 
+            .bancoDestino(txLocal.getCuentaOrigen())  
+            .cuentaOrigen(txLocal.getCuentaDestino())  
+            .cuentaDestino(txLocal.getCuentaOrigen())  
+            .monto(txLocal.getMonto())
+            .razonDevolucion(motivo)
+            .referencia(UUID.randomUUID().toString())
+            .timestamp(LocalDateTime.now().toString())
+            .build();
 
         cuentaClient.enviarDevolucion(req);
         
