@@ -127,6 +127,8 @@ services:
     build: ./Web/Frontend_Ecusol
     container_name: front-web-ecusol
     ports: [ "8090:80" ]
+    depends_on:
+      - ecusol-gateway
     networks: [ ecusol-net ]
 
   # --- SERVICIO VENTANILLA ---
