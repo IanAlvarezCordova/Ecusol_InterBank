@@ -26,12 +26,12 @@ public class TransaccionAsyncConsumer {
     private final RestTemplate restTemplate;
 
     @RabbitListener(queues = "${banco.cola.entrada}")
-    public void recibirTransferenciaRabbit(IsoMensajeDTO payload, 
-                                           Channel channel, 
-                                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
+    public void recibirTransferenciaRabbit(IsoMensajeDTO payload,
+            Channel channel,
+            @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
         String instructionId = payload.getBody().getInstructionId();
-        log.info("⚡ RabbitMQ: Recibida transferencia ID: {} desde {}", 
-                 instructionId, payload.getHeader().getOriginatingBankId());
+        log.info("⚡ RabbitMQ: Recibida transferencia ID: {} desde {}",
+                instructionId, payload.getHeader().getOriginatingBankId());
 
         String estadoFinal = "COMPLETED";
         String mensajeFinal = "Transferencia procesada con éxito";
@@ -39,13 +39,13 @@ public class TransaccionAsyncConsumer {
         try {
             if (repository.existsByInstructionId(instructionId)) {
                 log.warn("⚠️ Duplicado detectado en cola: {}", instructionId);
-                channel.basicAck(tag, false); 
-                return; 
+                channel.basicAck(tag, false);
+                return;
             }
 
             String cuentaDestino = payload.getBody().getCreditor().getAccountId();
             java.math.BigDecimal monto = payload.getBody().getAmount().getValue();
-            
+
             log.info("💰 Acreditando {} a cuenta destino: {}", monto, cuentaDestino);
             cuentaClient.acreditar(cuentaDestino, monto);
 
@@ -58,7 +58,7 @@ public class TransaccionAsyncConsumer {
             tx.setEstado("COMPLETED");
             tx.setFechaEjecucion(LocalDateTime.now());
             tx.setRolTransaccion("CREDITO");
-            
+
             repository.save(tx);
             log.info("✅ Transacción guardada en BD: {}", instructionId);
 
@@ -69,7 +69,7 @@ public class TransaccionAsyncConsumer {
             log.error("❌ Error procesando mensaje de cola [ID: {}]: {}", instructionId, e.getMessage(), e);
             estadoFinal = "FAILED";
             mensajeFinal = "Error: " + e.getMessage();
-            
+
             try {
                 channel.basicNack(tag, false, true);
                 log.warn("⚠️ NACK enviado a RabbitMQ - mensaje reencolado para reintentar");
@@ -78,16 +78,11 @@ public class TransaccionAsyncConsumer {
             }
         }
 
-        try {
-            enviarWebhookCallback(
-                payload.getHeader().getCallbackUrl(), 
-                instructionId, 
-                estadoFinal, 
-                mensajeFinal
-            );
-        } catch (Exception e) {
-            log.error("❌ Error enviando webhook callback: {}", e.getMessage());
-        }
+        // En Switch V2 no llamamos al banco origen via webhook directo, el Switch
+        // maneja la respuesta
+        // al recibir nuestro ACK. (Logic removed because callbackUrl header is not
+        // supported)
+        log.info("✅ Transacción procesada correctamente (Consumer).");
     }
 
     private void enviarWebhookCallback(String urlCallback, String txId, String estado, String mensaje) {
@@ -99,11 +94,10 @@ public class TransaccionAsyncConsumer {
         log.info("📤 Enviando Webhook a: {} [Estado: {}]", urlCallback, estado);
 
         Map<String, Object> response = Map.of(
-            "transaccionId", txId,
-            "estado", estado, 
-            "mensaje", mensaje,
-            "fechaProcesamiento", LocalDateTime.now().toString()
-        );
+                "transaccionId", txId,
+                "estado", estado,
+                "mensaje", mensaje,
+                "fechaProcesamiento", LocalDateTime.now().toString());
 
         try {
             restTemplate.postForEntity(urlCallback, response, Void.class);

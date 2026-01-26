@@ -12,7 +12,8 @@ public class IsoMensajeDTO implements Serializable {
     @JsonProperty("body")
     private IsoBody body;
 
-    public IsoMensajeDTO() {}
+    public IsoMensajeDTO() {
+    }
 
     public IsoMensajeDTO(IsoHeader header, IsoBody body) {
         this.header = header;
@@ -48,17 +49,13 @@ public class IsoMensajeDTO implements Serializable {
         @JsonProperty("originatingBankId")
         private String originatingBankId;
 
-        // NEW: to emulate Nexus
-        @JsonProperty("callbackUrl")
-        private String callbackUrl;
+        public IsoHeader() {
+        }
 
-        public IsoHeader() {}
-
-        public IsoHeader(String messageId, String creationDateTime, String originatingBankId, String callbackUrl) {
+        public IsoHeader(String messageId, String creationDateTime, String originatingBankId) {
             this.messageId = messageId;
             this.creationDateTime = creationDateTime;
             this.originatingBankId = originatingBankId;
-            this.callbackUrl = callbackUrl;
         }
 
         public String getMessageId() {
@@ -83,14 +80,6 @@ public class IsoMensajeDTO implements Serializable {
 
         public void setOriginatingBankId(String originatingBankId) {
             this.originatingBankId = originatingBankId;
-        }
-
-        public String getCallbackUrl() {
-            return callbackUrl;
-        }
-
-        public void setCallbackUrl(String callbackUrl) {
-            this.callbackUrl = callbackUrl;
         }
     }
 
@@ -121,7 +110,8 @@ public class IsoMensajeDTO implements Serializable {
         @JsonProperty("returnReason")
         private String returnReason;
 
-        public IsoBody() {}
+        public IsoBody() {
+        }
 
         public IsoBody(
                 String instructionId,
@@ -131,8 +121,7 @@ public class IsoMensajeDTO implements Serializable {
                 IsoCreditor creditor,
                 String remittanceInformation,
                 String originalInstructionId,
-                String returnReason
-        ) {
+                String returnReason) {
             this.instructionId = instructionId;
             this.endToEndId = endToEndId;
             this.amount = amount;
@@ -216,7 +205,8 @@ public class IsoMensajeDTO implements Serializable {
         @JsonProperty("value")
         private BigDecimal value;
 
-        public IsoAmount() {}
+        public IsoAmount() {
+        }
 
         public IsoAmount(String currency, BigDecimal value) {
             this.currency = currency;
@@ -251,7 +241,8 @@ public class IsoMensajeDTO implements Serializable {
         @JsonProperty("accountType")
         private String accountType;
 
-        public IsoDebtor() {}
+        public IsoDebtor() {
+        }
 
         public IsoDebtor(String name, String accountId, String accountType) {
             this.name = name;
@@ -298,7 +289,8 @@ public class IsoMensajeDTO implements Serializable {
         @JsonProperty("targetBankId")
         private String targetBankId;
 
-        public IsoCreditor() {}
+        public IsoCreditor() {
+        }
 
         public IsoCreditor(String name, String accountId, String accountType, String targetBankId) {
             this.name = name;

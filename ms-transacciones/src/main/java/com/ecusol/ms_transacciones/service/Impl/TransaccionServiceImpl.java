@@ -73,8 +73,7 @@ public class TransaccionServiceImpl implements TransaccionService {
                 IsoHeader header = new IsoHeader(
                         tx.getInstructionId(),
                         LocalDateTime.now().toString(),
-                        switchClient.getBancoCodigo(),
-                        webhookUrl);
+                        switchClient.getBancoCodigo());
 
                 // 2. Preparar Body
                 IsoBody body = new IsoBody();
