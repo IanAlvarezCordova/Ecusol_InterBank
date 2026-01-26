@@ -19,7 +19,7 @@ public class WebhookController {
     private final RabbitTemplate rabbitTemplate;
     private final com.ecusol.ms_transacciones.client.CuentaClient cuentaClient;
 
-    @PostMapping("/recepcion")
+    @PostMapping("/webhook")
     public ResponseEntity<Map<String, Object>> recibirTransferencia(@RequestBody IsoMensajeDTO mensaje) {
         String messageId = mensaje.getHeader().getMessageId();
         String instructionId = mensaje.getBody().getInstructionId();
