@@ -96,7 +96,7 @@ services:
       - URL_MS_CLIENTES=http://ecusol-ms-clientes:8084
       - EUREKA_CLIENT_ENABLED=false
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-ecusol:5432/postgres?currentSchema=ecusol_transacciones
-      - APP_SWITCH_URL=http://34.16.106.7:8000/api/v2/switch/transfers
+      - APP_SWITCH_URL=http://34.16.106.7:8000
       - APP_SWITCH_NETWORK_URL=http://34.16.106.7:8000
       - APP_SWITCH_APIKEY=PUBLIC_KEY_ECUSOL_67890
       - BANCO_CODIGO=ECUSOLBK
