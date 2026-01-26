@@ -59,5 +59,6 @@ public interface TransaccionMapper {
     @Mapping(target = "idTransaccion", source = "transaccionId")
     @Mapping(target = "fechaHora", source = "fechaEjecucion")
     @Mapping(target = "mensaje", source = "descripcion")
+    @Mapping(target = "estado", source = "estado")
     RespuestaTransferenciaDTO entityToRespuestaDto(Transaccion transaccion);
 }

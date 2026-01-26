@@ -133,7 +133,10 @@ public class TransaccionServiceImpl implements TransaccionService {
                     log.error(">>> ERROR GRAVE: Fallo compensación manual", exComp);
                 }
                 tx.setEstado("FAILED");
-                tx.setDescripcion("Error: " + e.getMessage());
+                String errorMsg = "Error: " + e.getMessage();
+                if (errorMsg.length() > 250)
+                    errorMsg = errorMsg.substring(0, 250);
+                tx.setDescripcion(errorMsg);
             }
         }
         return mapper.entityToRespuestaDto(repository.save(tx));
