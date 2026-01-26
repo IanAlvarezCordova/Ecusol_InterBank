@@ -84,13 +84,13 @@ public class TransaccionServiceImpl implements TransaccionService {
                 IsoDebtor debtor = new IsoDebtor();
                 debtor.setName("Cliente EcuSol");
                 debtor.setAccountId(tx.getCuentaOrigen());
-                debtor.setAccountType("SAVINGS");
+                debtor.setAccountType("CACC");
                 body.setDebtor(debtor);
 
                 IsoCreditor creditor = new IsoCreditor();
                 creditor.setName("Beneficiario Externo");
                 creditor.setAccountId(tx.getCuentaDestino());
-                creditor.setAccountType("SAVINGS");
+                creditor.setAccountType("CACC");
                 creditor.setTargetBankId(solicitud.getBancoDestinoCodigo());
                 body.setCreditor(creditor);
 
