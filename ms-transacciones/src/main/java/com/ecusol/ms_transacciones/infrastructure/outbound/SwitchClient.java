@@ -31,21 +31,15 @@ public class SwitchClient {
         System.out.println(
                 ">>> ENVIANDO AL SWITCH [" + switchUrl + "] APIKEY_LEN=" + (apiKey != null ? apiKey.length() : "NULL"));
 
-        try {
-            String response = restClient.post()
-                    .uri(switchUrl)
-                    .header("apikey", apiKey)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(request)
-                    .retrieve()
-                    .body(String.class);
+        String response = restClient.post()
+                .uri(switchUrl)
+                .header("apikey", apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .retrieve()
+                .body(String.class);
 
-            System.out.println(">>> RESPUESTA SWITCH: " + response);
-
-        } catch (Exception e) {
-            System.err.println(">>> ERROR SWITCH: " + e.getMessage());
-            throw new RuntimeException("Error comunicando con el Switch: " + e.getMessage());
-        }
+        System.out.println(">>> RESPUESTA SWITCH: " + response);
     }
 
     public List<BancoDTO> obtenerBancos() {
