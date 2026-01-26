@@ -22,7 +22,7 @@ public interface TransaccionMapper {
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "fechaEjecucion", ignore = true)
     @Mapping(target = "referencia", ignore = true)
-    @Mapping(target = "codigoBicDestino", ignore = true)
+    @Mapping(target = "codigoBicDestino", source = "bancoDestinoCodigo")
     @Mapping(target = "mensajeError", ignore = true)
     Transaccion solicitudToEntity(SolicitudTransferenciaDTO dto);
 
