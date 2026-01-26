@@ -103,13 +103,6 @@ public class IsoMensajeDTO implements Serializable {
         @JsonProperty("remittanceInformation")
         private String remittanceInformation;
 
-        // OPTIONAL FIELDS to match Nexus DTO
-        @JsonProperty("originalInstructionId")
-        private String originalInstructionId;
-
-        @JsonProperty("returnReason")
-        private String returnReason;
-
         public IsoBody() {
         }
 
@@ -119,17 +112,13 @@ public class IsoMensajeDTO implements Serializable {
                 IsoAmount amount,
                 IsoDebtor debtor,
                 IsoCreditor creditor,
-                String remittanceInformation,
-                String originalInstructionId,
-                String returnReason) {
+                String remittanceInformation) {
             this.instructionId = instructionId;
             this.endToEndId = endToEndId;
             this.amount = amount;
             this.debtor = debtor;
             this.creditor = creditor;
             this.remittanceInformation = remittanceInformation;
-            this.originalInstructionId = originalInstructionId;
-            this.returnReason = returnReason;
         }
 
         public String getInstructionId() {
@@ -178,22 +167,6 @@ public class IsoMensajeDTO implements Serializable {
 
         public void setRemittanceInformation(String remittanceInformation) {
             this.remittanceInformation = remittanceInformation;
-        }
-
-        public String getOriginalInstructionId() {
-            return originalInstructionId;
-        }
-
-        public void setOriginalInstructionId(String originalInstructionId) {
-            this.originalInstructionId = originalInstructionId;
-        }
-
-        public String getReturnReason() {
-            return returnReason;
-        }
-
-        public void setReturnReason(String returnReason) {
-            this.returnReason = returnReason;
         }
     }
 
