@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*")
 public class VentanillaController {
 
-    @Autowired private VentanillaService service;
+    @Autowired
+    private VentanillaService service;
 
     @GetMapping("/clientes/{cedula}")
     public ResponseEntity<ResumenClienteDTO> buscarCliente(@PathVariable String cedula) {
@@ -24,10 +25,15 @@ public class VentanillaController {
         String ref = service.realizarOperacion(op);
         return ResponseEntity.ok("Operación Exitosa. Ref: " + ref);
     }
-    
+
     @GetMapping("/cuentas/validar/{numero}")
     public ResponseEntity<InfoCuentaDTO> validarCuenta(@PathVariable String numero) {
         return ResponseEntity.ok(service.validarCuenta(numero));
+    }
+
+    @GetMapping("/transacciones/cuenta/{numero}")
+    public ResponseEntity<java.util.List<MovimientoDTO>> getMovimientos(@PathVariable String numero) {
+        return ResponseEntity.ok(service.getMovimientos(numero));
     }
 
     // --- ADMIN ---
@@ -43,16 +49,22 @@ public class VentanillaController {
         service.activarCuenta(cuenta);
         return ResponseEntity.ok("Cuenta activada");
     }
-    
+
     @PostMapping("/cliente/estado")
     public ResponseEntity<String> cambiarEstadoCliente(@RequestParam String cedula, @RequestParam String estado) {
         service.cambiarEstadoCliente(cedula, estado);
         return ResponseEntity.ok("Estado cliente actualizado");
     }
-    
+
     @DeleteMapping("/cuenta/{cuenta}")
     public ResponseEntity<String> eliminarCuenta(@PathVariable String cuenta) {
         service.eliminarCuenta(cuenta);
         return ResponseEntity.ok("Cuenta eliminada");
+    }
+
+    @PostMapping("/devolucion")
+    public ResponseEntity<String> procesarDevolucion(@RequestParam String instructionId) {
+        service.procesarDevolucion(instructionId);
+        return ResponseEntity.ok("Devolución procesada");
     }
 }

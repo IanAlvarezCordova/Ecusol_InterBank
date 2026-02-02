@@ -102,7 +102,7 @@ public class BancaWebService {
             String operacion = mapaTipos.getOrDefault(mov.getTransaccionId(), "TRANSFERENCIA");
 
             resultado.add(new MovimientoWebDTO(
-                    mov.getFechaEjecucion(),
+                    mov.getFechaEjecucion().atZone(java.time.ZoneId.of("UTC")),
                     mov.getTipo(),
                     monto.doubleValue(),
                     saldoCalculado.doubleValue(),

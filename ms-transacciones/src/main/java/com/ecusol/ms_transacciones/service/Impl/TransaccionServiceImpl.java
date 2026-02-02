@@ -32,9 +32,6 @@ public class TransaccionServiceImpl implements TransaccionService {
     private final TransaccionMapper mapper;
     private final jakarta.persistence.EntityManager entityManager;
 
-    @Value("${banco.webhook.url}")
-    private String webhookUrl;
-
     @Override
     @Transactional
     public RespuestaTransferenciaDTO realizarTransferencia(SolicitudTransferenciaDTO solicitud) {
@@ -91,7 +88,7 @@ public class TransaccionServiceImpl implements TransaccionService {
                 creditor.setName("Beneficiario Externo");
                 creditor.setAccountId(tx.getCuentaDestino());
                 creditor.setAccountType("CACC");
-                creditor.setTargetBankId("NEXUS_BK");
+                creditor.setTargetBankId(solicitud.getBancoDestinoCodigo());
                 body.setCreditor(creditor);
 
                 body.setRemittanceInformation(tx.getDescripcion());
@@ -123,6 +120,7 @@ public class TransaccionServiceImpl implements TransaccionService {
                     log.error(">>> ERROR GRAVE: Fallo compensación manual", exComp);
                 }
                 tx.setEstado("FAILED");
+                tx.setFechaEjecucion(LocalDateTime.now()); // Set timestamp for failed transactions too
                 String errorMsg = "Error: " + e.getMessage();
                 if (errorMsg.length() > 250)
                     errorMsg = errorMsg.substring(0, 250);
@@ -200,7 +198,18 @@ public class TransaccionServiceImpl implements TransaccionService {
             throw new RuntimeException("Solo se pueden devolver transacciones exitosas (COMPLETED).");
         }
 
-        long horasTranscurridas = java.time.temporal.ChronoUnit.HOURS.between(txLocal.getFechaEjecucion(),
+        // Handle null fechaEjecucion (legacy transactions) - use current time as
+        // fallback
+        LocalDateTime fechaReferencia = txLocal.getFechaEjecucion();
+        if (fechaReferencia == null) {
+            log.warn("Transacción {} tiene fechaEjecucion null. Usando fecha actual para validación.",
+                    txLocal.getInstructionId());
+            // For legacy transactions without execution date, allow refund (assume within
+            // 48h)
+            fechaReferencia = LocalDateTime.now().minusHours(1); // Assume it happened 1 hour ago
+        }
+
+        long horasTranscurridas = java.time.temporal.ChronoUnit.HOURS.between(fechaReferencia,
                 LocalDateTime.now());
         if (horasTranscurridas > 48) {
             throw new RuntimeException("La transacción excede el plazo de 48 horas para devolución.");
@@ -249,6 +258,29 @@ public class TransaccionServiceImpl implements TransaccionService {
         } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
             log.info("Optimistic Lock: Webhook ganó. Todo OK.");
         }
+    }
+
+    @Override
+    @Transactional
+    public void solicitarDevolucionPorId(Integer transaccionId, BigDecimal monto, String motivo,
+            String numeroCuentaPropietaria) {
+        log.info(">>> Solicitud de devolución por ID recibida para TX ID: {}, Monto: {}", transaccionId, monto);
+
+        Transaccion txLocal = repository.findById(transaccionId)
+                .orElseThrow(() -> new RuntimeException("Transacción no encontrada con ID: " + transaccionId));
+
+        // Validar que el monto coincida (seguridad adicional)
+        if (txLocal.getMonto().compareTo(monto) != 0) {
+            throw new RuntimeException("El monto no coincide con la transacción especificada.");
+        }
+
+        // Verificar que tenga instructionId para proceder
+        if (txLocal.getInstructionId() == null || txLocal.getInstructionId().isEmpty()) {
+            throw new RuntimeException("La transacción no tiene un ID de instrucción válido para devolución.");
+        }
+
+        // Delegar al método principal
+        solicitarDevolucion(txLocal.getInstructionId(), motivo, numeroCuentaPropietaria);
     }
 
     // Método para manejar Webhook de Retorno (Entrante)

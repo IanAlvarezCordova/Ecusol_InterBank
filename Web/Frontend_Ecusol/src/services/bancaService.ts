@@ -31,6 +31,29 @@ export const bancaService = {
   },
 
   validarDestinatario: async (numeroCuenta: string, banco?: string) => {
+    // Si es banco externo (no Ecusol y no vacío), usar el endpoint de Transacciones (Account Lookup)
+    if (banco && banco !== 'ECUSOL_BK' && banco !== 'ECUASOL') {
+      const response = await apiClient<any>('/transacciones/validar-cuenta', {
+        method: 'POST',
+        body: JSON.stringify({
+          targetBankId: banco,
+          targetAccountNumber: numeroCuenta
+        })
+      });
+
+      if (response.status === 'SUCCESS' && response.data.exists) {
+        return {
+          nombreTitular: response.data.ownerName,
+          cedulaParcial: "******", // No retornada por Switch
+          tipoCuenta: "Cuenta Externa",
+          numeroCuenta: numeroCuenta
+        };
+      } else {
+        throw new Error(response.data?.mensaje || "Cuenta no encontrada en banco destino");
+      }
+    }
+
+    // Lógica original para Ecusol (Web Backend)
     const url = banco
       ? `/web/validar-destinatario/${numeroCuenta}?banco=${banco}`
       : `/web/validar-destinatario/${numeroCuenta}`;

@@ -8,7 +8,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class VentanillaService {
 
-    @Autowired private CoreClient coreClient;
+    @Autowired
+    private CoreClient coreClient;
 
     public ResumenClienteDTO buscarCliente(String cedula) {
         return coreClient.buscarCliente(cedula);
@@ -18,9 +19,9 @@ public class VentanillaService {
         // --- CORRECCIÓN DE MAPEO (CRÍTICO) ---
         // Convertimos del DTO del Frontend al DTO del Core
         TransaccionCajaRequest req = new TransaccionCajaRequest();
-        
+
         req.setTipoOperacion(op.getTipoOperacion());
-        req.setCuentaOrigen(op.getNumeroCuentaOrigen());   // Mapeo explícito
+        req.setCuentaOrigen(op.getNumeroCuentaOrigen()); // Mapeo explícito
         req.setCuentaDestino(op.getNumeroCuentaDestino()); // Mapeo explícito
         req.setMonto(op.getMonto());
         req.setDescripcion(op.getDescripcion());
@@ -28,7 +29,11 @@ public class VentanillaService {
         // Enviamos el objeto correcto al cliente HTTP
         return coreClient.operar(req);
     }
-    
+
+    public java.util.List<MovimientoDTO> getMovimientos(String cuenta) {
+        return coreClient.obtenerMovimientos(cuenta);
+    }
+
     public InfoCuentaDTO validarCuenta(String numero) {
         return coreClient.validarCuenta(numero);
     }
@@ -42,12 +47,16 @@ public class VentanillaService {
     public void activarCuenta(String cuenta) {
         coreClient.cambiarEstadoCuenta(cuenta, "ACTIVA");
     }
-    
+
     public void cambiarEstadoCliente(String cedula, String estado) {
         coreClient.cambiarEstadoCliente(cedula, estado);
     }
 
     public void eliminarCuenta(String cuenta) {
-        coreClient.eliminarCuenta(cuenta); 
+        coreClient.eliminarCuenta(cuenta);
+    }
+
+    public void procesarDevolucion(String instructionId) {
+        coreClient.procesarDevolucion(instructionId);
     }
 }

@@ -19,22 +19,6 @@ services:
     ports: [ "27019:27017" ]
     networks: [ ecusol-net ]
 
-  rabbitmq-server:
-    image: rabbitmq:3-management
-    container_name: rabbitmq-server
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-    networks: [ ecusol-net ]
   # --- GATEWAY (Puerto 9180) ---
   ecusol-gateway:
     build: ./gateway-server
@@ -84,8 +68,7 @@ services:
     build: ./ms-transacciones
     container_name: ecusol-ms-transacciones
     depends_on:
-      rabbitmq-server:
-        condition: service_healthy
+
       postgres-db-ecusol:
         condition: service_started
     environment:
@@ -100,12 +83,7 @@ services:
       - APP_SWITCH_NETWORK_URL=http://34.16.106.7:8000
       - APP_SWITCH_APIKEY=PUBLIC_KEY_ECUSOL_67890
       - BANCO_CODIGO=ECUSOL_BK
-      - SPRING_RABBITMQ_HOST=rabbitmq-server
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
-      - BANCO_COLA_ENTRADA=queue-banco-ecusol
-      - WEBHOOK_URL=http://ecusol-ms-transacciones:8082/api/transacciones/callback
+
     ports: [ "8182:8082" ]
     networks: [ ecusol-net ]
 
@@ -144,7 +122,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - ECUSOL_CORE_URL=http://ecusol-gateway:8080/api/core
+      - ECUSOL_CORE_URL=http://ecusol-gateway:8080/api
     networks: [ ecusol-net ]
 
   # --- MODIFICACIÓN: FRONTEND VENTANILLA ---

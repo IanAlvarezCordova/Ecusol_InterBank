@@ -12,55 +12,54 @@ public class CoreClient {
     private final WebClient webClient;
 
     public CoreClient(@Value("${ecusol.core.url}") String coreUrl) {
-        // coreUrl = http://localhost:8081/api/core
+        // coreUrl = http://localhost:8080/api
         this.webClient = WebClient.builder().baseUrl(coreUrl).build();
     }
 
     public ResumenClienteDTO buscarCliente(String cedula) {
         try {
             // Ruta relativa: /ventanilla/buscar-cliente/{cedula}
-            // URL Final: http://localhost:8081/api/core/ventanilla/buscar-cliente/...
+            // URL Final: http://localhost:8080/api/core/ventanilla/buscar-cliente/...
             return webClient.get()
-                    .uri("/ventanilla/buscar-cliente/" + cedula) 
+                    .uri("/core/ventanilla/buscar-cliente/" + cedula)
                     .retrieve()
-                    .onStatus(HttpStatusCode::isError, response -> 
-                        response.bodyToMono(String.class) // Leemos el mensaje de error del Core
-                                .flatMap(error -> Mono.error(new RuntimeException(error)))
-                    )
+                    .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class) // Leemos el
+                                                                                                     // mensaje de error
+                                                                                                     // del Core
+                            .flatMap(error -> Mono.error(new RuntimeException(error))))
                     .bodyToMono(ResumenClienteDTO.class)
                     .block();
         } catch (Exception e) {
             // Si es un error de negocio que ya capturamos, lo relanzamos tal cual
             if (e.getMessage().contains("bloqueado") || e.getMessage().contains("inactiva")) {
-                 throw new RuntimeException(e.getMessage());
+                throw new RuntimeException(e.getMessage());
             }
             throw new RuntimeException("Cliente no encontrado o error en Core");
         }
     }
 
-    // CORRECCIÓN: Capturamos el mensaje de error (body) cuando el Core devuelve 400/500
+    // CORRECCIÓN: Capturamos el mensaje de error (body) cuando el Core devuelve
+    // 400/500
     public String operar(TransaccionCajaRequest req) {
         return webClient.post()
-                .uri("/ventanilla/operar")
+                .uri("/core/ventanilla/operar")
                 .bodyValue(req)
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, response -> 
-                    response.bodyToMono(String.class)
-                            .flatMap(error -> Mono.error(new RuntimeException(error)))
-                )
+                .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class)
+                        .flatMap(error -> Mono.error(new RuntimeException(error))))
                 .bodyToMono(String.class)
                 .block();
     }
-    
+
     public InfoCuentaDTO validarCuenta(String numero) {
         try {
-             return webClient.get()
-                .uri("/ventanilla/info-cuenta/" + numero)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, response -> Mono.error(new RuntimeException("Cuenta no válida")))
-                .bodyToMono(InfoCuentaDTO.class)
-                .block();
-        } catch(Exception e) {
+            return webClient.get()
+                    .uri("/core/ventanilla/info-cuenta/" + numero)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, response -> Mono.error(new RuntimeException("Cuenta no válida")))
+                    .bodyToMono(InfoCuentaDTO.class)
+                    .block();
+        } catch (Exception e) {
             throw new RuntimeException("Cuenta no existe o no se pudo validar");
         }
     }
@@ -70,59 +69,86 @@ public class CoreClient {
     public String cambiarEstadoCuenta(String numeroCuenta, String estado) {
         return webClient.put()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/ventanilla/cuentas/" + numeroCuenta + "/estado") // Solo /ventanilla/...
+                        .path("/core/ventanilla/cuentas/" + numeroCuenta + "/estado") // Prefix /core
                         .queryParam("estado", estado)
                         .build())
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, response -> 
-                    response.bodyToMono(String.class)
-                            .flatMap(error -> Mono.error(new RuntimeException(error)))
-                )
+                .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class)
+                        .flatMap(error -> Mono.error(new RuntimeException(error))))
                 .bodyToMono(String.class)
                 .block();
     }
-    
+
     public String cambiarEstadoCliente(String cedula, String estado) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/ventanilla/clientes/estado") // Solo /ventanilla/...
+                        .path("/core/ventanilla/clientes/estado") // Prefix /core
                         .queryParam("cedula", cedula)
                         .queryParam("estado", estado)
                         .build())
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, response -> 
-                    response.bodyToMono(String.class)
-                            .flatMap(error -> Mono.error(new RuntimeException(error)))
-                )
+                .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class)
+                        .flatMap(error -> Mono.error(new RuntimeException(error))))
                 .bodyToMono(String.class)
                 .block();
     }
 
     public String eliminarCuenta(String numeroCuenta) {
         return webClient.delete()
-                .uri("/ventanilla/cuentas/" + numeroCuenta) // Solo /ventanilla/...
+                .uri("/core/ventanilla/cuentas/" + numeroCuenta) // Prefix /core
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, response -> 
-                    response.bodyToMono(String.class)
-                            .flatMap(error -> Mono.error(new RuntimeException(error)))
-                )
+                .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class)
+                        .flatMap(error -> Mono.error(new RuntimeException(error))))
                 .bodyToMono(String.class)
                 .block();
+    }
+
+    public java.util.List<MovimientoDTO> obtenerMovimientos(String numeroCuenta) {
+        try {
+            return webClient.get()
+                    .uri("/v1/transacciones/cuenta/" + numeroCuenta)
+                    .retrieve()
+                    .bodyToFlux(MovimientoDTO.class)
+                    .collectList()
+                    .block();
+        } catch (Exception e) {
+            return java.util.Collections.emptyList();
+        }
     }
 
     // --- NUEVO: OBTENER SUCURSAL POR ID ---
     public SucursalDTO obtenerSucursal(Integer id) {
         try {
-             return webClient.get()
-                .uri("/sucursales/" + id) // Endpoint del CoreSucursalController
-                .retrieve()
-                .bodyToMono(SucursalDTO.class)
-                .block();
-        } catch(Exception e) {
+            return webClient.get()
+                    .uri("/sucursales/" + id) // Endpoint del CoreSucursalController
+                    .retrieve()
+                    .bodyToMono(SucursalDTO.class)
+                    .block();
+        } catch (Exception e) {
             // Si falla, retornamos un objeto dummy para no romper el login
             SucursalDTO dummy = new SucursalDTO();
             dummy.setNombre("Sucursal " + id);
             return dummy;
+        }
+    }
+
+    // --- NUEVO: PROCESAR DEVOLUCIÓN ---
+    public void procesarDevolucion(String instructionId) {
+        try {
+            webClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v1/transacciones/devolucion")
+                            .queryParam("originalId", instructionId)
+                            .queryParam("motivo", "AC04")
+                            .build())
+                    .retrieve()
+                    .onStatus(org.springframework.http.HttpStatusCode::isError,
+                            response -> response.bodyToMono(String.class)
+                                    .flatMap(error -> reactor.core.publisher.Mono.error(new RuntimeException(error))))
+                    .bodyToMono(String.class)
+                    .block();
+        } catch (Exception e) {
+            throw new RuntimeException("Error al procesar devolución: " + e.getMessage());
         }
     }
 }

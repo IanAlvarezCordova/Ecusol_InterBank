@@ -24,9 +24,9 @@ export interface ResumenClienteDTO {
 
 // Info para validar destino
 export interface InfoCuentaDTO {
-    numeroCuenta: string;
-    nombreCompleto: string; // Ojo: En Java le pusimos nombreCompleto
-    tipoCuenta: string;
+  numeroCuenta: string;
+  nombreCompleto: string; // Ojo: En Java le pusimos nombreCompleto
+  tipoCuenta: string;
 }
 
 // Operaciones
@@ -38,14 +38,17 @@ export interface VentanillaOpDTO {
 }
 
 export interface MovimientoDTO {
-  id?: string;
+  transaccionId?: number;
   instructionId?: string;
-  numeroCuenta: string;
-  tipo: "DEPOSITO" | "RETIRO" | "TRANSFERENCIA" | "TRANSACCIONES";
+  referencia: string;
+  tipo: string; // "DEPOSITO", "RETIRO", etc.
+  rolTransaccion: string; // "DEBITO", "CREDITO"
   monto: number;
   descripcion: string;
-  fechaCreacion: string;
+  fechaEjecucion: string; // ISO String or Array
   estado: string;
   cuentaDestino?: string;
+  // helpers
   nombreDestino?: string;
+  numeroCuenta?: string;
 }

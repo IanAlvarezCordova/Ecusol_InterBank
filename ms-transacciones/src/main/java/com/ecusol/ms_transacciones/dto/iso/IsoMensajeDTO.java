@@ -52,10 +52,21 @@ public class IsoMensajeDTO implements Serializable {
         public IsoHeader() {
         }
 
+        @JsonProperty("messageNamespace")
+        private String messageNamespace; // e.g., "acmt.023.001.02"
+
         public IsoHeader(String messageId, String creationDateTime, String originatingBankId) {
             this.messageId = messageId;
             this.creationDateTime = creationDateTime;
             this.originatingBankId = originatingBankId;
+        }
+
+        public String getMessageNamespace() {
+            return messageNamespace;
+        }
+
+        public void setMessageNamespace(String messageNamespace) {
+            this.messageNamespace = messageNamespace;
         }
 
         public String getMessageId() {

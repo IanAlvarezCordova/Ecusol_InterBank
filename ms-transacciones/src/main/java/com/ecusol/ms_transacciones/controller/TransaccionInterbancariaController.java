@@ -6,11 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import com.ecusol.ms_transacciones.client.CuentaClient;
 import com.ecusol.ms_transacciones.infrastructure.outbound.SwitchClient;
-import com.ecusol.ms_transacciones.config.RabbitMQConfig;
+
 import com.ecusol.ms_transacciones.dto.BancoDTO;
 import com.ecusol.ms_transacciones.dto.SwitchWebhookResponse;
 import com.ecusol.ms_transacciones.model.Transaccion;
@@ -30,7 +29,6 @@ public class TransaccionInterbancariaController {
         private final TransaccionRepository repository;
         private final CuentaClient cuentaClient;
         private final SwitchClient switchClient;
-        private final RabbitTemplate rabbitTemplate;
 
         /**
          * Webhook que recibe transferencias entrantes desde el Switch DIGICONECU.
@@ -119,46 +117,6 @@ public class TransaccionInterbancariaController {
                 return ResponseEntity.ok(bancos);
         }
 
-        @Operation(summary = "Encolar transferencia en RabbitMQ para procesamiento asincrónico")
-        @PostMapping("/enqueue")
-        public ResponseEntity<Map<String, String>> encolarTransferencia(
-                        @RequestBody com.ecusol.ms_transacciones.dto.iso.IsoMensajeDTO mensaje) {
-                
-                String instructionId = mensaje.getBody().getInstructionId();
-                String bancoOrigen = mensaje.getHeader().getOriginatingBankId();
-                
-                log.info("📤 Enqueue request recibido del Switch");
-                log.info("   ├─ Instruction ID: {}", instructionId);
-                log.info("   ├─ Banco Origen: {}", bancoOrigen);
-                log.info("   └─ Acción: Encolar en RabbitMQ...");
-
-                try {
-                        rabbitTemplate.convertAndSend(
-                                RabbitMQConfig.EXCHANGE_ECUSOL,
-                                RabbitMQConfig.ROUTING_KEY_RETURNS,
-                                mensaje
-                        );
-
-                        log.info("Transferencia encolada exitosamente en RabbitMQ");
-                        
-                        return ResponseEntity.ok(Map.of(
-                                "success", "true",
-                                "message", "Mensaje encolado exitosamente en RabbitMQ",
-                                "instructionId", instructionId,
-                                "queue", RabbitMQConfig.EXCHANGE_ECUSOL
-                        ));
-
-                } catch (Exception e) {
-                        log.error("Error encolando en RabbitMQ: {}", e.getMessage());
-                        
-                        return ResponseEntity.status(500).body(Map.of(
-                                "success", "false",
-                                "message", "Error al encolar: " + e.getMessage(),
-                                "instructionId", instructionId
-                        ));
-                }
-        }
-
         /**
          * Health check del servicio de transacciones.
          */
@@ -168,5 +126,21 @@ public class TransaccionInterbancariaController {
                                 "status", "UP",
                                 "service", "ms-transacciones",
                                 "banco", switchClient.getBancoCodigo()));
+        }
+
+        @Operation(summary = "Validar cuenta en banco destino (Account Lookup)")
+        @PostMapping("/validar-cuenta")
+        public ResponseEntity<com.ecusol.ms_transacciones.dto.AccountLookupResponse> validarCuentaExterna(
+                        @RequestBody com.ecusol.ms_transacciones.dto.AccountLookupRequest.Body requestBody) {
+
+                // Build full request with Header
+                var fullRequest = com.ecusol.ms_transacciones.dto.AccountLookupRequest.builder()
+                                .header(com.ecusol.ms_transacciones.dto.AccountLookupRequest.Header.builder()
+                                                .originatingBankId(switchClient.getBancoCodigo())
+                                                .build())
+                                .body(requestBody)
+                                .build();
+
+                return ResponseEntity.ok(switchClient.realizarLookup(fullRequest));
         }
 }

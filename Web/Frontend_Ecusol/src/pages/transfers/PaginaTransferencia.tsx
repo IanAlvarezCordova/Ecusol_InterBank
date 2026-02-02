@@ -8,7 +8,7 @@ import { CheckCircle2, User, Users, Loader2, AlertTriangle, Wallet, ArrowRight, 
 import { toast } from 'react-hot-toast';
 
 const BANCOS_TERCEROS = [
-  { id: 'NEXUS_BANK', nombre: 'Nexus', color: 'bg-blue-600' },
+  { id: 'NEXUS_BK', nombre: 'Nexus', color: 'bg-blue-600' },
   { id: 'ARCBANK', nombre: 'ArcBank', color: 'bg-orange-500' },
   { id: 'BANTEC', nombre: 'BanTec', color: 'bg-purple-500' }
 ];
@@ -83,25 +83,14 @@ const PaginaTransferencia = () => {
     // Si estamos en modo Interbancario y el banco NO es Ecusol, simulamos éxito (No podemos validar cuentas externas)
     const esExterno = modo === 'INTERBANCARIA' || (modo === 'ECUASOL' && banco !== 'ECUSOL_BK' && false); // Logic simplification: Modo ECUASOL is internal.
 
-    if (modo === 'INTERBANCARIA') {
-      // Simulación de éxito para bancos externos
-      setTimeout(() => {
-        setDestinatarioData({
-          nombreTitular: "Beneficiario Externo (" + banco + ")",
-          cedulaParcial: "******",
-          tipoCuenta: "Cuenta Externa",
-          numeroCuenta: cuentaAValidar
-        });
-        if (cuentaAValidar !== destinoManual) setDestinoManual(cuentaAValidar);
-        toast.success("Cuenta válida (Formato)");
-        setValidando(false);
-      }, 800);
-      return;
-    }
+    // Simulation removed to use real endpoint
+    // if (modo === 'INTERBANCARIA') { ... }
 
     try {
       // Si es EcuSol (Interno), validamos real
-      const data = await bancaService.validarDestinatario(cuentaAValidar, 'ECUSOL_BK');
+      // Determine target bank: If INTERBANCARIA use selected 'banco', else 'ECUSOL_BK'
+      const targetBank = (modo === 'INTERBANCARIA' && banco) ? banco : 'ECUSOL_BK';
+      const data = await bancaService.validarDestinatario(cuentaAValidar, targetBank);
       setDestinatarioData(data);
       if (cuentaAValidar !== destinoManual) setDestinoManual(cuentaAValidar);
       toast.success("Cuenta verificada: " + data.nombreTitular);

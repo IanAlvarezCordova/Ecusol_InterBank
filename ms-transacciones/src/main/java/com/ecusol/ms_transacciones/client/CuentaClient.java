@@ -4,7 +4,7 @@ import com.ecusol.ms_transacciones.dto.ReturnRequestDTO;
 import com.ecusol.ms_transacciones.exception.SaldoInsuficienteException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 public class CuentaClient {
 
     private final RestTemplate restTemplate;
-    private final RabbitTemplate rabbitTemplate;
 
     @Value("${api.cuentas.url}")
     private String cuentasBaseUrl;
@@ -100,16 +99,9 @@ public class CuentaClient {
         }
     }
 
-    public void enviarDevolucionAsincrona(ReturnRequestDTO request) {
-        log.info("Enviando devolución ASÍNCRONA a RabbitMQ: Original ID {}",
-                request.getBody().getOriginalInstructionId());
-        rabbitTemplate.convertAndSend("switch.exchange", "switch.returns.in", request);
-    }
-
     public String validarCuenta(String numeroCuenta) {
         try {
             String url = cuentasUrl() + "/por-numero/" + numeroCuenta;
-            // Usamos Map para no depender del DTO de CBS
             org.springframework.http.ResponseEntity<java.util.Map> response = restTemplate
                     .getForEntity(url, java.util.Map.class);
 
@@ -120,11 +112,21 @@ public class CuentaClient {
             return null; // Cuenta no existe
         } catch (Exception e) {
             log.error("Error validando cuenta {}: {}", numeroCuenta, e.getMessage());
-            // Si falla ms-cuentas, asumimos error técnico MS03 (aunque aquí devolvemos null
-            // o lanzamos)
             throw new RuntimeException("Error técnico validando cuenta: " + e.getMessage());
         }
         return null;
+    }
+
+    public com.ecusol.ms_transacciones.dto.CuentaResponseDTO obtenerCuentaPorNumero(String numeroCuenta) {
+        try {
+            String url = cuentasUrl() + "/por-numero/" + numeroCuenta;
+            return restTemplate.getForObject(url, com.ecusol.ms_transacciones.dto.CuentaResponseDTO.class);
+        } catch (HttpClientErrorException.NotFound e) {
+            return null;
+        } catch (Exception e) {
+            log.error("Error obteniendo cuenta {}: {}", numeroCuenta, e.getMessage());
+            return null;
+        }
     }
 
     public String getSwitchNetworkUrl() {

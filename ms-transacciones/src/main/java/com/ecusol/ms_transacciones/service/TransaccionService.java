@@ -13,5 +13,10 @@ public interface TransaccionService {
 
     void solicitarDevolucion(String originalInstructionId, String motivo, String numeroCuentaPropietaria);
 
+    // Overload: Fallback using transaccionId + monto when instructionId is
+    // unavailable
+    void solicitarDevolucionPorId(Integer transaccionId, java.math.BigDecimal monto, String motivo,
+            String numeroCuentaPropietaria);
+
     void procesarDevolucionEntrante(ReturnRequestDTO dto);
 }
